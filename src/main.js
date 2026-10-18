@@ -6,7 +6,7 @@ const gameMarkup = `
   <main class="page-shell">
     <header class="site-header">
       <p class="eyebrow"><span class="status-light"></span> MADEINRODRI // AI POWERED. 2025</p>
-      <h1>SPACE<span>ADVENTURE</span></h1>
+      <h1>SPACE<span> ADVENTURE</span></h1>
       <p class="intro">UNA MISIÓN. UN UNIVERSO. ¿CUÁNTO PUEDES SOBREVIVIR?</p>
     </header>
 
