@@ -126,6 +126,111 @@ h1 span {
   image-rendering: pixelated;
 }
 
+.touch-controls {
+  width: 170px;
+  height: 160px;
+  margin-top: 15px;
+  display: grid;
+  grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+  justify-items: center;
+  align-items: center;
+  touch-action: none;
+  user-select: none;
+}
+
+.direction-button {
+  width: 48px;
+  height: 44px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(168, 255, 180, 0.72);
+  color: var(--green);
+  background: rgba(4, 13, 19, 0.92);
+  box-shadow: inset 0 0 12px rgba(53, 237, 112, 0.08), 0 0 10px rgba(53, 237, 112, 0.08);
+  cursor: pointer;
+  font-family: Arial, sans-serif;
+  font-size: 23px;
+  line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+  transition: color 100ms ease, background 100ms ease, box-shadow 100ms ease, transform 100ms ease;
+}
+
+.direction-button:hover,
+.direction-button.is-pressed {
+  transform: scale(0.95);
+  color: #07140b;
+  background: var(--green);
+  box-shadow: 0 0 17px rgba(108, 255, 137, 0.36);
+}
+
+.direction-button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+.direction-up {
+  grid-area: 1 / 2;
+}
+
+.direction-left {
+  grid-area: 2 / 1;
+}
+
+.direction-right {
+  grid-area: 2 / 3;
+}
+
+.direction-down {
+  grid-area: 3 / 2;
+}
+
+.direction-center {
+  grid-area: 2 / 2;
+  color: #568b69;
+  font-size: 18px;
+  text-shadow: 0 0 8px rgba(108, 255, 137, 0.4);
+}
+
+.touch-controls.is-hidden {
+  display: none;
+}
+
+.touch-controls-toggle {
+  position: fixed;
+  z-index: 10;
+  left: 22px;
+  bottom: 20px;
+  min-height: 40px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid rgba(168, 255, 180, 0.75);
+  color: var(--green);
+  background: rgba(4, 13, 19, 0.92);
+  box-shadow: 0 0 15px rgba(108, 255, 137, 0.16);
+  cursor: pointer;
+  font-size: 7px;
+  transition: background 140ms ease, box-shadow 140ms ease;
+}
+
+.touch-controls-toggle:hover {
+  background: rgba(14, 37, 24, 0.97);
+  box-shadow: 0 0 21px rgba(108, 255, 137, 0.32);
+}
+
+.touch-controls-toggle:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 4px;
+}
+
+#touch-toggle-icon {
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+}
+
 .corner {
   position: absolute;
   z-index: 2;
@@ -163,7 +268,7 @@ h1 span {
 
 .game-actions {
   width: min(88vw, 480px);
-  margin-top: 23px;
+  margin-top: 4px;
   display: flex;
   justify-content: center;
   gap: 9px;
@@ -508,6 +613,14 @@ h1 span {
 
   .music-button {
     right: 12px;
+    bottom: 12px;
+    min-height: 36px;
+    padding: 0 10px;
+    font-size: 6px;
+  }
+
+  .touch-controls-toggle {
+    left: 12px;
     bottom: 12px;
     min-height: 36px;
     padding: 0 10px;

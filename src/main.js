@@ -5,7 +5,7 @@ import "./style.css";
 const gameMarkup = `
   <main class="page-shell">
     <header class="site-header">
-      <p class="eyebrow"><span class="status-light"></span> ARCADE SYSTEMS // EST. 2086</p>
+      <p class="eyebrow"><span class="status-light"></span> MADEINRODRI // AI POWERED. 2025</p>
       <h1>SPACE<span>ADVENTURE</span></h1>
       <p class="intro">UNA MISIÓN. UN UNIVERSO. ¿CUÁNTO PUEDES SOBREVIVIR?</p>
     </header>
@@ -17,6 +17,14 @@ const gameMarkup = `
         <span class="corner corner-bottom-left" aria-hidden="true"></span>
         <span class="corner corner-bottom-right" aria-hidden="true"></span>
         <div id="game-canvas" aria-label="Juego: esquiva asteroides y recoge monedas"></div>
+      </div>
+
+      <div class="touch-controls is-hidden" id="touch-controls" role="group" aria-label="Controles táctiles de dirección">
+        <button class="direction-button direction-up" type="button" data-direction="up" aria-label="Mover arriba">↑</button>
+        <button class="direction-button direction-left" type="button" data-direction="left" aria-label="Mover a la izquierda">←</button>
+        <span class="direction-center" aria-hidden="true">✦</span>
+        <button class="direction-button direction-right" type="button" data-direction="right" aria-label="Mover a la derecha">→</button>
+        <button class="direction-button direction-down" type="button" data-direction="down" aria-label="Mover abajo">↓</button>
       </div>
 
       <div class="game-actions" aria-label="Controles de la partida">
@@ -63,10 +71,20 @@ const gameMarkup = `
       <span id="music-icon" aria-hidden="true">♫</span>
       <span id="music-label">APAGAR MÚSICA</span>
     </button>
+    <button
+      class="touch-controls-toggle"
+      id="touch-controls-toggle"
+      type="button"
+      aria-controls="touch-controls"
+      aria-expanded="false"
+    >
+      <span id="touch-toggle-icon" aria-hidden="true">⌖</span>
+      <span id="touch-toggle-label">MOSTRAR CONTROLES</span>
+    </button>
 
     <footer class="site-footer">
       <div class="footer-line"></div>
-      <p>CREADO CON <span class="footer-heart">♥</span> Y MUCHO CAFÉ</p>
+      <p>CREADO CON <span class="footer-heart">♥</span> Y MUCHO CAFÉ, por MADEINRODRI</p>
       <p class="footer-credit">SPACE ADVENTURE <span>·</span> EXPLORA. ESQUIVA. SOBREVIVE.</p>
     </footer>
   </main>
@@ -84,13 +102,17 @@ function sortScores(scores) {
   return scores.sort(
     (first, second) =>
       second.score - first.score ||
-      new Date(second.achievedAt).getTime() - new Date(first.achievedAt).getTime(),
+      new Date(second.achievedAt).getTime() -
+        new Date(first.achievedAt).getTime(),
   );
 }
 
 function renderScores(scores) {
   scoresList.replaceChildren();
-  personalBestLabel.textContent = String(scores[0]?.score ?? 0).padStart(5, "0");
+  personalBestLabel.textContent = String(scores[0]?.score ?? 0).padStart(
+    5,
+    "0",
+  );
 
   if (scores.length === 0) {
     const row = document.createElement("tr");
@@ -130,7 +152,9 @@ function loadScores() {
 
     const parsedScores = JSON.parse(savedScores);
     if (!Array.isArray(parsedScores)) {
-      throw new TypeError("El formato guardado de puntuaciones no es una lista.");
+      throw new TypeError(
+        "El formato guardado de puntuaciones no es una lista.",
+      );
     }
 
     return sortScores(
@@ -164,8 +188,12 @@ function saveScore(score) {
     statsStatus.textContent = "";
     renderScores(savedScores);
   } catch (error) {
-    console.error("No se pudo guardar la puntuación en el almacenamiento local.", error);
-    statsStatus.textContent = "NO SE PUDO GUARDAR ESTA PUNTUACIÓN EN ESTE NAVEGADOR.";
+    console.error(
+      "No se pudo guardar la puntuación en el almacenamiento local.",
+      error,
+    );
+    statsStatus.textContent =
+      "NO SE PUDO GUARDAR ESTA PUNTUACIÓN EN ESTE NAVEGADOR.";
   }
 }
 
@@ -202,6 +230,7 @@ class SpaceScene extends Phaser.Scene {
     this.running = false;
     this.paused = false;
     this.invulnerable = false;
+    this.touchDirections = new Set();
   }
 
   // Precarga fondos, spritesheets y efectos de sonido antes de crear la escena.
@@ -270,6 +299,12 @@ class SpaceScene extends Phaser.Scene {
     this.loseSound = this.sound.add("lose-sound", { volume: 0.4 });
 
     this.game.events.on("start-game", this.startGame, this);
+    this.game.events.on("touch-direction", this.setTouchDirection, this);
+    this.game.events.on(
+      "clear-touch-directions",
+      this.clearTouchDirections,
+      this,
+    );
   }
 
   // Define las animaciones en bucle de monedas y la animación de una explosión.
@@ -328,6 +363,7 @@ class SpaceScene extends Phaser.Scene {
   startGame() {
     if (this.running) return;
 
+    this.clearTouchDirections();
     this.paused = false;
     gameRunning = true;
     menuMusic.pause();
@@ -365,6 +401,7 @@ class SpaceScene extends Phaser.Scene {
   pauseGame() {
     if (!this.running || this.paused) return;
 
+    this.clearTouchDirections();
     this.paused = true;
     this.prompt.setText("JUEGO EN PAUSA");
     this.music.pause();
@@ -385,11 +422,27 @@ class SpaceScene extends Phaser.Scene {
 
   // Reinicia desde cero incluso si la escena estaba pausada o la ronda terminó.
   restartGame() {
+    this.clearTouchDirections();
     if (this.paused) this.scene.resume();
     this.paused = false;
     this.running = false;
     this.music.stop();
     this.startGame();
+  }
+
+  // Mantiene una dirección activa mientras se presiona su botón táctil.
+  setTouchDirection(direction, isPressed) {
+    if (!["up", "down", "left", "right"].includes(direction)) return;
+    if (isPressed) {
+      this.touchDirections.add(direction);
+    } else {
+      this.touchDirections.delete(direction);
+    }
+  }
+
+  // Evita que una dirección quede pulsada al pausar, reiniciar o cambiar de ventana.
+  clearTouchDirections() {
+    this.touchDirections.clear();
   }
 
   // Crea un asteroide aleatorio con tamaño, velocidad y giro propios.
@@ -434,10 +487,14 @@ class SpaceScene extends Phaser.Scene {
     if (!this.running) return;
 
     const movement = (delta / 1000) * 245;
-    if (this.cursors.left.isDown) this.player.x -= movement;
-    if (this.cursors.right.isDown) this.player.x += movement;
-    if (this.cursors.up.isDown) this.player.y -= movement;
-    if (this.cursors.down.isDown) this.player.y += movement;
+    if (this.cursors.left.isDown || this.touchDirections.has("left"))
+      this.player.x -= movement;
+    if (this.cursors.right.isDown || this.touchDirections.has("right"))
+      this.player.x += movement;
+    if (this.cursors.up.isDown || this.touchDirections.has("up"))
+      this.player.y -= movement;
+    if (this.cursors.down.isDown || this.touchDirections.has("down"))
+      this.player.y += movement;
     this.player.x = Phaser.Math.Clamp(this.player.x, 24, 456);
     this.player.y = Phaser.Math.Clamp(this.player.y, 42, 456);
 
@@ -529,6 +586,7 @@ class SpaceScene extends Phaser.Scene {
 
   // Detiene la ronda al perder las vidas, muestra el resultado y devuelve la música al menú.
   endGame() {
+    this.clearTouchDirections();
     this.running = false;
     this.paused = false;
     gameRunning = false;
@@ -569,9 +627,39 @@ const pauseButton = document.querySelector("#pause-button");
 const pauseLabel = document.querySelector("#pause-label");
 const pauseIcon = document.querySelector("#pause-icon");
 const restartButton = document.querySelector("#restart-button");
+const directionButtons = document.querySelectorAll(".direction-button");
+const touchControls = document.querySelector("#touch-controls");
+const touchControlsToggle = document.querySelector("#touch-controls-toggle");
+const touchToggleLabel = document.querySelector("#touch-toggle-label");
+const touchToggleIcon = document.querySelector("#touch-toggle-icon");
 const musicButton = document.querySelector("#music-button");
 const musicLabel = document.querySelector("#music-label");
 const musicIcon = document.querySelector("#music-icon");
+
+// En pantallas táctiles el pad inicia visible; en equipos de escritorio queda oculto.
+const hasCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
+const setTouchControlsVisible = (visible) => {
+  touchControls.classList.toggle("is-hidden", !visible);
+  touchControlsToggle.setAttribute("aria-expanded", String(visible));
+  touchControlsToggle.setAttribute(
+    "aria-label",
+    visible ? "Ocultar controles táctiles" : "Mostrar controles táctiles",
+  );
+  touchToggleLabel.textContent = visible
+    ? "OCULTAR CONTROLES"
+    : "MOSTRAR CONTROLES";
+  touchToggleIcon.textContent = visible ? "×" : "⌖";
+  if (!visible) {
+    game.events.emit("clear-touch-directions");
+    directionButtons.forEach((button) => button.classList.remove("is-pressed"));
+  }
+};
+
+setTouchControlsVisible(hasCoarsePointer);
+
+touchControlsToggle.addEventListener("click", () => {
+  setTouchControlsVisible(touchControls.classList.contains("is-hidden"));
+});
 
 playButton.addEventListener("click", () => {
   game.events.emit("start-game");
@@ -588,6 +676,37 @@ pauseButton.addEventListener("click", () => {
 
 restartButton.addEventListener("click", () => {
   game.scene.getScene("space").restartGame();
+});
+
+// pointer capture conserva el movimiento sostenido aunque el dedo se deslice fuera del botón.
+directionButtons.forEach((button) => {
+  const direction = button.dataset.direction;
+
+  button.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    button.setPointerCapture(event.pointerId);
+    game.events.emit("touch-direction", direction, true);
+    button.classList.add("is-pressed");
+  });
+
+  const releaseDirection = (event) => {
+    if (
+      event.type === "lostpointercapture" &&
+      !button.classList.contains("is-pressed")
+    )
+      return;
+    game.events.emit("touch-direction", direction, false);
+    button.classList.remove("is-pressed");
+  };
+
+  button.addEventListener("pointerup", releaseDirection);
+  button.addEventListener("pointercancel", releaseDirection);
+  button.addEventListener("lostpointercapture", releaseDirection);
+});
+
+window.addEventListener("blur", () => {
+  game.events.emit("clear-touch-directions");
+  directionButtons.forEach((button) => button.classList.remove("is-pressed"));
 });
 
 game.events.on("game-started", () => {
