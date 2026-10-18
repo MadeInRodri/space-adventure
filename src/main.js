@@ -19,10 +19,20 @@ const gameMarkup = `
         <div id="game-canvas" aria-label="Juego: esquiva asteroides y recoge monedas"></div>
       </div>
 
-      <button class="play-button" id="play-button" type="button">
-        <span class="play-icon" aria-hidden="true">▶</span>
-        <span id="play-label">INICIAR MISIÓN</span>
-      </button>
+      <div class="game-actions" aria-label="Controles de la partida">
+        <button class="play-button" id="play-button" type="button">
+          <span class="play-icon" aria-hidden="true">▶</span>
+          <span id="play-label">INICIAR MISIÓN</span>
+        </button>
+        <button class="secondary-button" id="pause-button" type="button" disabled>
+          <span id="pause-icon" aria-hidden="true">Ⅱ</span>
+          <span id="pause-label">PAUSAR</span>
+        </button>
+        <button class="secondary-button" id="restart-button" type="button" disabled>
+          <span aria-hidden="true">↻</span>
+          <span>REINICIAR</span>
+        </button>
+      </div>
       <p class="control-hint"><span>←</span> <span>↑</span> <span>↓</span> <span>→</span> PARA MOVERTE</p>
     </section>
 
@@ -72,6 +82,7 @@ class SpaceScene extends Phaser.Scene {
     this.lives = 3;
     this.score = 0;
     this.running = false;
+    this.paused = false;
     this.invulnerable = false;
   }
 
@@ -199,6 +210,7 @@ class SpaceScene extends Phaser.Scene {
   startGame() {
     if (this.running) return;
 
+    this.paused = false;
     gameRunning = true;
     menuMusic.pause();
     this.asteroids.forEach((item) => item.sprite.destroy());
@@ -212,7 +224,7 @@ class SpaceScene extends Phaser.Scene {
     this.player.setPosition(240, 390).setAlpha(1);
     this.heartIcons.forEach((heart) => heart.setVisible(true));
     this.scoreLabel.setText("00000");
-    this.prompt.setText("");
+    this.prompt.setText("").setFontSize(12);
     this.asteroidTimer?.remove();
     this.coinTimer?.remove();
     this.asteroidTimer = this.time.addEvent({
@@ -228,6 +240,38 @@ class SpaceScene extends Phaser.Scene {
       loop: true,
     });
     if (musicEnabled) this.music.play();
+    this.game.events.emit("game-started");
+  }
+
+  // Congela la escena y pausa la música sin perder el estado actual de la ronda.
+  pauseGame() {
+    if (!this.running || this.paused) return;
+
+    this.paused = true;
+    this.prompt.setText("JUEGO EN PAUSA");
+    this.music.pause();
+    this.scene.pause();
+    this.game.events.emit("game-paused");
+  }
+
+  // Reanuda la escena y la música si el jugador no la ha silenciado.
+  resumeGame() {
+    if (!this.running || !this.paused) return;
+
+    this.paused = false;
+    this.prompt.setText("");
+    this.scene.resume();
+    if (musicEnabled) this.music.play();
+    this.game.events.emit("game-resumed");
+  }
+
+  // Reinicia desde cero incluso si la escena estaba pausada o la ronda terminó.
+  restartGame() {
+    if (this.paused) this.scene.resume();
+    this.paused = false;
+    this.running = false;
+    this.music.stop();
+    this.startGame();
   }
 
   // Crea un asteroide aleatorio con tamaño, velocidad y giro propios.
@@ -368,6 +412,7 @@ class SpaceScene extends Phaser.Scene {
   // Detiene la ronda al perder las vidas, muestra el resultado y devuelve la música al menú.
   endGame() {
     this.running = false;
+    this.paused = false;
     gameRunning = false;
     this.asteroidTimer?.remove();
     this.coinTimer?.remove();
@@ -401,19 +446,56 @@ const game = new Phaser.Game({
 // CONTROLES HTML: conectan los botones externos con los eventos y el estado de Phaser.
 const playButton = document.querySelector("#play-button");
 const playLabel = document.querySelector("#play-label");
+const pauseButton = document.querySelector("#pause-button");
+const pauseLabel = document.querySelector("#pause-label");
+const pauseIcon = document.querySelector("#pause-icon");
+const restartButton = document.querySelector("#restart-button");
 const musicButton = document.querySelector("#music-button");
 const musicLabel = document.querySelector("#music-label");
 const musicIcon = document.querySelector("#music-icon");
 
 playButton.addEventListener("click", () => {
   game.events.emit("start-game");
+});
+
+pauseButton.addEventListener("click", () => {
+  const scene = game.scene.getScene("space");
+  if (scene.paused) {
+    scene.resumeGame();
+  } else {
+    scene.pauseGame();
+  }
+});
+
+restartButton.addEventListener("click", () => {
+  game.scene.getScene("space").restartGame();
+});
+
+game.events.on("game-started", () => {
   playLabel.textContent = "MISIÓN EN CURSO";
+  playButton.disabled = true;
   playButton.classList.add("is-playing");
+  pauseButton.disabled = false;
+  restartButton.disabled = false;
+  pauseLabel.textContent = "PAUSAR";
+  pauseIcon.textContent = "Ⅱ";
+});
+
+game.events.on("game-paused", () => {
+  pauseLabel.textContent = "REANUDAR";
+  pauseIcon.textContent = "▶";
+});
+
+game.events.on("game-resumed", () => {
+  pauseLabel.textContent = "PAUSAR";
+  pauseIcon.textContent = "Ⅱ";
 });
 
 game.events.on("game-over", () => {
   playLabel.textContent = "JUGAR DE NUEVO";
+  playButton.disabled = false;
   playButton.classList.remove("is-playing");
+  pauseButton.disabled = true;
 });
 
 // El botón de música conmuta audio de menú o de partida sin alterar su estado de juego.
@@ -440,4 +522,4 @@ document.addEventListener("pointerdown", playMenuMusic, { once: true });
 document.addEventListener("keydown", playMenuMusic, { once: true });
 playMenuMusic();
 
-// PRÓXIMAS MEJORAS: agregar pausa/reanudación, controles táctiles para móviles y récord local.
+// PRÓXIMAS MEJORAS: agregar controles táctiles para móviles, récord local y dificultad ajustable.
