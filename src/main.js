@@ -25,6 +25,11 @@ const gameMarkup = `
       <p class="control-hint"><span>←</span> <span>↑</span> <span>↓</span> <span>→</span> PARA MOVERTE</p>
     </section>
 
+    <button class="music-button" id="music-button" type="button" aria-pressed="true">
+      <span id="music-icon" aria-hidden="true">♫</span>
+      <span id="music-label">APAGAR MÚSICA</span>
+    </button>
+
     <footer class="site-footer">
       <div class="footer-line"></div>
       <p>CREADO CON <span class="footer-heart">♥</span> Y MUCHO CAFÉ</p>
@@ -34,6 +39,22 @@ const gameMarkup = `
 `;
 
 document.querySelector("#app").innerHTML = gameMarkup;
+
+let musicEnabled = true;
+let gameRunning = false;
+const menuMusic = new Audio("/assets/music-menu.mp3");
+menuMusic.loop = true;
+menuMusic.volume = 0.25;
+
+function playMenuMusic() {
+  if (!musicEnabled || gameRunning || !menuMusic.paused) return;
+
+  menuMusic.play().catch((error) => {
+    if (error.name !== "NotAllowedError") {
+      console.error("No se pudo reproducir la música del menú.", error);
+    }
+  });
+}
 
 class SpaceScene extends Phaser.Scene {
   constructor() {
@@ -159,6 +180,8 @@ class SpaceScene extends Phaser.Scene {
   startGame() {
     if (this.running) return;
 
+    gameRunning = true;
+    menuMusic.pause();
     this.asteroids.forEach((item) => item.sprite.destroy());
     this.coins.forEach((item) => item.sprite.destroy());
     this.asteroids = [];
@@ -185,7 +208,7 @@ class SpaceScene extends Phaser.Scene {
       callbackScope: this,
       loop: true,
     });
-    this.music.play();
+    if (musicEnabled) this.music.play();
   }
 
   spawnAsteroid() {
@@ -306,9 +329,11 @@ class SpaceScene extends Phaser.Scene {
 
   endGame() {
     this.running = false;
+    gameRunning = false;
     this.asteroidTimer?.remove();
     this.coinTimer?.remove();
     this.music.stop();
+    playMenuMusic();
     this.loseSound.play();
     this.prompt.setText(`MISIÓN FALLIDA\nPUNTOS: ${this.score}\n\nPULSA JUGAR DE NUEVO`);
     this.prompt.setFontSize(10);
@@ -333,6 +358,9 @@ const game = new Phaser.Game({
 
 const playButton = document.querySelector("#play-button");
 const playLabel = document.querySelector("#play-label");
+const musicButton = document.querySelector("#music-button");
+const musicLabel = document.querySelector("#music-label");
+const musicIcon = document.querySelector("#music-icon");
 
 playButton.addEventListener("click", () => {
   game.events.emit("start-game");
@@ -344,3 +372,25 @@ game.events.on("game-over", () => {
   playLabel.textContent = "JUGAR DE NUEVO";
   playButton.classList.remove("is-playing");
 });
+
+musicButton.addEventListener("click", () => {
+  musicEnabled = !musicEnabled;
+  musicButton.setAttribute("aria-pressed", String(musicEnabled));
+  musicLabel.textContent = musicEnabled ? "APAGAR MÚSICA" : "ACTIVAR MÚSICA";
+  musicIcon.textContent = musicEnabled ? "♫" : "×";
+
+  if (musicEnabled) {
+    if (gameRunning) {
+      game.scene.getScene("space").music.play();
+    } else {
+      playMenuMusic();
+    }
+  } else {
+    menuMusic.pause();
+    if (gameRunning) game.scene.getScene("space").music.pause();
+  }
+});
+
+document.addEventListener("pointerdown", playMenuMusic, { once: true });
+document.addEventListener("keydown", playMenuMusic, { once: true });
+playMenuMusic();

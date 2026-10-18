@@ -212,6 +212,39 @@ h1 span {
   color: var(--green);
 }
 
+.music-button {
+  position: fixed;
+  z-index: 10;
+  right: 22px;
+  bottom: 20px;
+  min-height: 40px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid rgba(168, 255, 180, 0.75);
+  color: var(--green);
+  background: rgba(4, 13, 19, 0.92);
+  box-shadow: 0 0 15px rgba(108, 255, 137, 0.16);
+  cursor: pointer;
+  font-size: 7px;
+  transition: background 140ms ease, box-shadow 140ms ease;
+}
+
+.music-button:hover {
+  background: rgba(14, 37, 24, 0.97);
+  box-shadow: 0 0 21px rgba(108, 255, 137, 0.32);
+}
+
+.music-button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 4px;
+}
+
+#music-icon {
+  font-size: 14px;
+}
+
 .site-footer {
   width: min(100%, 480px);
   margin-top: auto;
@@ -275,6 +308,14 @@ h1 span {
 
   .site-footer {
     padding-top: 22px;
+    font-size: 6px;
+  }
+
+  .music-button {
+    right: 12px;
+    bottom: 12px;
+    min-height: 36px;
+    padding: 0 10px;
     font-size: 6px;
   }
 }
