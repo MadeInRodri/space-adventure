@@ -78,6 +78,8 @@ npm run preview
 
 ## Publicación en Netlify
 
+**Prueba Space Adventure ahora mismo en Netlify ->** [ Jugar Space Adventure](https://myspaceadventure.netlify.app)
+
 Al conectar el repositorio a Netlify, configura:
 
 - **Build command:** `npm run build`
