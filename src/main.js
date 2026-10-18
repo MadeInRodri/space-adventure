@@ -200,9 +200,17 @@ function saveScore(score) {
 // AUDIO DEL MENÚ: estas variables permiten coordinar la música web y la del juego.
 let musicEnabled = true;
 let gameRunning = false;
+const hasCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
 const menuMusic = new Audio("/assets/music-menu.mp3");
 menuMusic.loop = true;
 menuMusic.volume = 0.25;
+
+// Evita el scroll accidental en teléfonos mientras se juega, sin alterar escritorio.
+function setPageScrollLocked(locked) {
+  if (hasCoarsePointer) {
+    document.documentElement.classList.toggle("game-scroll-locked", locked);
+  }
+}
 
 /**
  * Reproduce la música del menú si está habilitada y no hay una partida activa.
@@ -366,6 +374,7 @@ class SpaceScene extends Phaser.Scene {
     this.clearTouchDirections();
     this.paused = false;
     gameRunning = true;
+    setPageScrollLocked(true);
     menuMusic.pause();
     this.asteroids.forEach((item) => item.sprite.destroy());
     this.coins.forEach((item) => item.sprite.destroy());
@@ -403,6 +412,7 @@ class SpaceScene extends Phaser.Scene {
 
     this.clearTouchDirections();
     this.paused = true;
+    setPageScrollLocked(false);
     this.prompt.setText("JUEGO EN PAUSA");
     this.music.pause();
     this.scene.pause();
@@ -414,6 +424,7 @@ class SpaceScene extends Phaser.Scene {
     if (!this.running || !this.paused) return;
 
     this.paused = false;
+    setPageScrollLocked(true);
     this.prompt.setText("");
     this.scene.resume();
     if (musicEnabled) this.music.play();
@@ -590,6 +601,7 @@ class SpaceScene extends Phaser.Scene {
     this.running = false;
     this.paused = false;
     gameRunning = false;
+    setPageScrollLocked(false);
     this.asteroidTimer?.remove();
     this.coinTimer?.remove();
     this.music.stop();
@@ -637,7 +649,6 @@ const musicLabel = document.querySelector("#music-label");
 const musicIcon = document.querySelector("#music-icon");
 
 // En pantallas táctiles el pad inicia visible; en equipos de escritorio queda oculto.
-const hasCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
 const setTouchControlsVisible = (visible) => {
   touchControls.classList.toggle("is-hidden", !visible);
   touchControlsToggle.setAttribute("aria-expanded", String(visible));

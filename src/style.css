@@ -19,6 +19,8 @@
 
 * {
   box-sizing: border-box;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 body {
@@ -29,6 +31,12 @@ body {
     linear-gradient(180deg, rgba(2, 7, 13, 0.45), rgba(2, 7, 13, 0.72)),
     url("/assets/bg-page.png") center 44% / cover fixed,
     #03070d;
+}
+
+html.game-scroll-locked,
+html.game-scroll-locked body {
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 button {
