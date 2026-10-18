@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import "./style.css";
 
+// INTERFAZ: estructura de la página que envuelve el canvas de Phaser y sus controles.
 const gameMarkup = `
   <main class="page-shell">
     <header class="site-header">
@@ -40,12 +41,17 @@ const gameMarkup = `
 
 document.querySelector("#app").innerHTML = gameMarkup;
 
+// AUDIO DEL MENÚ: estas variables permiten coordinar la música web y la del juego.
 let musicEnabled = true;
 let gameRunning = false;
 const menuMusic = new Audio("/assets/music-menu.mp3");
 menuMusic.loop = true;
 menuMusic.volume = 0.25;
 
+/**
+ * Reproduce la música del menú si está habilitada y no hay una partida activa.
+ * Si el navegador bloquea el autoplay, se volverá a intentar tras una interacción.
+ */
 function playMenuMusic() {
   if (!musicEnabled || gameRunning || !menuMusic.paused) return;
 
@@ -56,9 +62,11 @@ function playMenuMusic() {
   });
 }
 
+// ESCENA PRINCIPAL: carga recursos, prepara la partida y ejecuta la lógica de juego.
 class SpaceScene extends Phaser.Scene {
   constructor() {
     super("space");
+    // Estado de la partida y colecciones de objetos que caen desde la parte superior.
     this.asteroids = [];
     this.coins = [];
     this.lives = 3;
@@ -67,6 +75,7 @@ class SpaceScene extends Phaser.Scene {
     this.invulnerable = false;
   }
 
+  // Precarga fondos, spritesheets y efectos de sonido antes de crear la escena.
   preload() {
     this.load.image("space-background", "/assets/bg-game.png");
     this.load.image("ship", "/assets/ship.png");
@@ -98,6 +107,7 @@ class SpaceScene extends Phaser.Scene {
     this.load.audio("game-music", "/assets/music-game.mp3");
   }
 
+  // Construye el fondo con scroll, HUD, nave, controles, textos y sonidos.
   create() {
     this.background = this.add
       .tileSprite(240, 240, 480, 480, "space-background")
@@ -106,7 +116,10 @@ class SpaceScene extends Phaser.Scene {
     this.createAnimations();
     this.createHud();
 
-    this.player = this.add.image(240, 390, "ship").setDisplaySize(44, 44).setDepth(3);
+    this.player = this.add
+      .image(240, 390, "ship")
+      .setDisplaySize(44, 44)
+      .setDepth(3);
     this.cursors = this.input.keyboard.createCursorKeys();
 
     this.prompt = this.add
@@ -130,6 +143,7 @@ class SpaceScene extends Phaser.Scene {
     this.game.events.on("start-game", this.startGame, this);
   }
 
+  // Define las animaciones en bucle de monedas y la animación de una explosión.
   createAnimations() {
     ["coin-1", "coin-5", "coin-10"].forEach((key) => {
       this.anims.create({
@@ -142,12 +156,16 @@ class SpaceScene extends Phaser.Scene {
 
     this.anims.create({
       key: "explosion-animation",
-      frames: this.anims.generateFrameNumbers("explosion", { start: 0, end: 7 }),
+      frames: this.anims.generateFrameNumbers("explosion", {
+        start: 0,
+        end: 7,
+      }),
       frameRate: 14,
       hideOnComplete: true,
     });
   }
 
+  // Dibuja las tres vidas y el marcador de puntos en la capa superior del canvas.
   createHud() {
     this.heartIcons = [0, 1, 2].map((index) =>
       this.add
@@ -177,6 +195,7 @@ class SpaceScene extends Phaser.Scene {
       .setDepth(5);
   }
 
+  // Inicia o reinicia la ronda, limpia objetos anteriores y programa sus apariciones.
   startGame() {
     if (this.running) return;
 
@@ -211,12 +230,18 @@ class SpaceScene extends Phaser.Scene {
     if (musicEnabled) this.music.play();
   }
 
+  // Crea un asteroide aleatorio con tamaño, velocidad y giro propios.
   spawnAsteroid() {
     if (!this.running) return;
 
     const size = Phaser.Math.Between(32, 58);
     const sprite = this.add
-      .image(Phaser.Math.Between(28, 452), -size, "asteroids", Phaser.Math.Between(0, 3))
+      .image(
+        Phaser.Math.Between(28, 452),
+        -size,
+        "asteroids",
+        Phaser.Math.Between(0, 3),
+      )
       .setDisplaySize(size, size)
       .setDepth(2);
     this.asteroids.push({
@@ -227,6 +252,7 @@ class SpaceScene extends Phaser.Scene {
     });
   }
 
+  // Selecciona una moneda (1, 5 o 10 puntos) y la inicia con su animación.
   spawnCoin() {
     if (!this.running) return;
 
@@ -240,6 +266,7 @@ class SpaceScene extends Phaser.Scene {
     this.coins.push({ sprite, value, speed: Phaser.Math.Between(105, 155) });
   }
 
+  // Se ejecuta cada frame: desplaza el fondo, controla la nave y actualiza objetos.
   update(_time, delta) {
     this.background.tilePositionY -= delta * (this.running ? 0.035 : 0.012);
     if (!this.running) return;
@@ -256,11 +283,13 @@ class SpaceScene extends Phaser.Scene {
     this.updateFallingObjects(this.coins, delta, "coin");
   }
 
+  // Mueve monedas y asteroides, resuelve recogidas/choques y retira objetos vencidos.
   updateFallingObjects(items, delta, type) {
     const speedScale = 1 + Math.min(this.score / 200, 0.45);
     items.forEach((item) => {
       item.sprite.y += (item.speed * speedScale * delta) / 1000;
-      if (type === "asteroid") item.sprite.rotation += (item.spin * delta) / 1000;
+      if (type === "asteroid")
+        item.sprite.rotation += (item.spin * delta) / 1000;
 
       if (type === "coin" && this.isTouching(item.sprite, 22)) {
         this.score += item.value;
@@ -290,10 +319,19 @@ class SpaceScene extends Phaser.Scene {
     }
   }
 
+  // Comprueba la colisión circular entre la nave y un objeto según su radio efectivo.
   isTouching(sprite, distance) {
-    return Phaser.Math.Distance.Between(this.player.x, this.player.y, sprite.x, sprite.y) < distance;
+    return (
+      Phaser.Math.Distance.Between(
+        this.player.x,
+        this.player.y,
+        sprite.x,
+        sprite.y,
+      ) < distance
+    );
   }
 
+  // Resta una vida, anima el impacto y concede invulnerabilidad temporal si sigue viva.
   loseLife() {
     if (!this.running || this.invulnerable) return;
 
@@ -327,6 +365,7 @@ class SpaceScene extends Phaser.Scene {
     });
   }
 
+  // Detiene la ronda al perder las vidas, muestra el resultado y devuelve la música al menú.
   endGame() {
     this.running = false;
     gameRunning = false;
@@ -335,12 +374,15 @@ class SpaceScene extends Phaser.Scene {
     this.music.stop();
     playMenuMusic();
     this.loseSound.play();
-    this.prompt.setText(`MISIÓN FALLIDA\nPUNTOS: ${this.score}\n\nPULSA JUGAR DE NUEVO`);
+    this.prompt.setText(
+      `MISIÓN FALLIDA\nPUNTOS: ${this.score}\n\nPULSA JUGAR DE NUEVO`,
+    );
     this.prompt.setFontSize(10);
     this.game.events.emit("game-over", this.score);
   }
 }
 
+// CONFIGURACIÓN PHASER: canvas cuadrado y escalable para adaptarse a la pantalla.
 const game = new Phaser.Game({
   type: Phaser.AUTO,
   parent: "game-canvas",
@@ -356,6 +398,7 @@ const game = new Phaser.Game({
   scene: [SpaceScene],
 });
 
+// CONTROLES HTML: conectan los botones externos con los eventos y el estado de Phaser.
 const playButton = document.querySelector("#play-button");
 const playLabel = document.querySelector("#play-label");
 const musicButton = document.querySelector("#music-button");
@@ -373,6 +416,7 @@ game.events.on("game-over", () => {
   playButton.classList.remove("is-playing");
 });
 
+// El botón de música conmuta audio de menú o de partida sin alterar su estado de juego.
 musicButton.addEventListener("click", () => {
   musicEnabled = !musicEnabled;
   musicButton.setAttribute("aria-pressed", String(musicEnabled));
@@ -391,6 +435,9 @@ musicButton.addEventListener("click", () => {
   }
 });
 
+// Los navegadores pueden exigir una acción del usuario antes de permitir reproducir audio.
 document.addEventListener("pointerdown", playMenuMusic, { once: true });
 document.addEventListener("keydown", playMenuMusic, { once: true });
 playMenuMusic();
+
+// PRÓXIMAS MEJORAS: agregar pausa/reanudación, controles táctiles para móviles y récord local.
