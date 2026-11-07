@@ -33,6 +33,8 @@ src/
   style.css                 # Estilos; mantenerlo unificado hasta que dividirlo aporte claridad
 ```
 
+El plan y las fases de migración están documentados en [docs/refactor-plan.md](docs/refactor-plan.md).
+
 Al trabajar durante la transición:
 
 - No asumas que la estructura objetivo ya fue implementada. Inspecciona el estado real antes de editar.
