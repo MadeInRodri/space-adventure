@@ -226,7 +226,42 @@ Las casillas marcadas inicialmente se comprobaron en la compilación local con i
 - [x] La música se detiene, reanuda y silencia con el mismo comportamiento observado en la fase 0.
 - [x] Las reglas configurables tienen una fuente de verdad y no cambian inadvertidamente la dificultad existente.
 
-### Fase 5 — Preparar y añadir nuevas mecánicas
+### Fase 5 — Rediseñar la interfaz e incorporar iconos
+
+Esta fase mejora la presentación visual sin alterar funcionalidades ni reglas del juego. Antes de implementarla, usar la skill `frontend-design` disponible en `.agents/skills/frontend-design/SKILL.md` para definir y revisar una dirección visual propia de SpaceAdventure.
+
+**Diseño visual**
+
+- Revisar la interfaz actual y proponer una mejora coherente con la temática arcade espacial, manteniendo el contenido y las acciones existentes.
+- Definir una guía breve de color, tipografía, jerarquía, espaciado y composición antes de cambiar estilos; revisar que las decisiones sean específicas del juego y no una plantilla genérica.
+- Mejorar la jerarquía visual y la consistencia de las pantallas, botones, HUD y tabla de puntuaciones sin añadir ni quitar funcionalidades.
+- Mantener diseño responsive, contraste suficiente, foco de teclado visible y respeto por `prefers-reduced-motion`.
+
+**Iconografía**
+
+- Inventariar los iconos que actualmente se representan con caracteres de texto y determinar sus ubicaciones en la interfaz.
+- Elegir una librería de iconos compatible con el proyecto e incorporar iconos consistentes para esas acciones/estados, conservando las etiquetas textuales y los nombres accesibles.
+- Mantener los iconos decorativos fuera del árbol accesible y proporcionar nombre accesible a cualquier icono que comunique información por sí solo.
+- Evitar que la iconografía cambie las acciones, los eventos, los controles de teclado/táctiles o las reglas del juego.
+
+**Salida / criterio de aceptación**
+
+**Resultados**
+
+- `src/style.css` aplica una paleta de azul índigo (`#171936`), panel violeta (`#23264f`), cian (`#73d8e6`), lavanda (`#b8afff`), amarillo solar (`#ffd166`) y texto claro (`#f5f2ff`). La fuente pixelada queda para la marca; `DM Mono` mantiene legibles controles y puntuaciones.
+- El lienzo sigue siendo el foco central; el registro de puntuaciones conserva su contenido y gana espacio en escritorio. La composición pasa a una columna en móvil, con foco de teclado visible y movimiento reducido respetado.
+- Los símbolos de controles, estados, navegación táctil y decoración se sustituyen por SVG de Lucide (`lucide`), ocultos a tecnologías de asistencia cuando son decorativos; se conservan etiquetas, nombres accesibles y eventos.
+- Se actualizaron el color de la barra del navegador y el favicon para coincidir con la nueva identidad.
+- `npm run build` pasa con la advertencia ya conocida del bundle superior a 500 kB. En navegador se verificaron escritorio y móvil (390 px), sin desbordamiento horizontal, y los flujos de inicio, pausa, reanudación, reinicio, música y controles táctiles. El almacenamiento de récords se restauró al estado vacío tras la prueba.
+
+**Salida / criterio de aceptación**
+
+- [x] La interfaz y los iconos tienen una dirección visual coherente, definida con apoyo de `frontend-design`.
+- [x] Los iconos de texto identificados se reemplazan por iconos de una librería; las etiquetas y nombres accesibles permanecen claros.
+- [x] No cambian funcionalidades, controles, estados, persistencia ni balance del juego.
+- [x] La compilación pasa y una revisión visual en escritorio y móvil confirma el diseño, accesibilidad y ausencia de regresiones funcionales.
+
+### Fase 6 — Preparar y añadir nuevas mecánicas
 
 Las nuevas mecánicas son funcionalidades posteriores a la separación; no son requisito para considerar terminada la extracción estructural.
 
@@ -256,7 +291,7 @@ Las nuevas mecánicas son funcionalidades posteriores a la separación; no son r
 - Cada mecánica nueva puede añadirse sin ampliar indiscriminadamente `SpaceScene` ni acoplar la UI a las reglas.
 - Las reglas de salud, dificultad y recompensas tienen límites y casos de borde definidos antes de codificarse.
 
-### Fase 6 — Pruebas y consolidación
+### Fase 7 — Pruebas y consolidación
 
 **Trabajo**
 
@@ -273,7 +308,7 @@ Las nuevas mecánicas son funcionalidades posteriores a la separación; no son r
 
 ## Orden de dependencias y commits
 
-El orden recomendado es: **Fase 0 → Fase 1 → Fase 2 → Fase 3 → Fase 4 → Fase 5**, con la Fase 6 aplicada desde que existan unidades comprobables y completada al final. Cada extracción debe ser un cambio acotado y revisable; ejecutar la compilación después de cada fase y conservar commits atómicos por responsabilidad. No hacer una reescritura completa en un único cambio.
+El orden recomendado es: **Fase 0 → Fase 1 → Fase 2 → Fase 3 → Fase 4 → Fase 5 → Fase 6**, con la Fase 7 aplicada desde que existan unidades comprobables y completada al final. La mejora visual de la Fase 5 precede a la incorporación de mecánicas para mantener ambos cambios separados y verificar que el rediseño no altere el comportamiento. Cada fase debe ser un cambio acotado y revisable; ejecutar la compilación después de cada fase y conservar commits atómicos por responsabilidad. No hacer una reescritura completa en un único cambio.
 
 ## Fuera de alcance por ahora
 
