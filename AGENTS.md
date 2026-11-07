@@ -8,7 +8,7 @@ Los recursos del juego y del sitio están en `public/assets/`. La página se mon
 
 ## Estado actual y dirección arquitectónica
 
-La refactorización está en curso. `src/main.js` todavía coordina el marcado, el audio y los controles DOM; las puntuaciones ya están separadas en `src/scores/scoreRepository.js` y `src/ui/scoreBoard.js`. La escena Phaser vive en `src/game/scenes/SpaceScene.js`, su configuración en `src/game/createGame.js` y los nombres de eventos compartidos en `src/game/events.js`. Inspecciona los archivos actuales antes de asumir qué fases o módulos existen.
+La refactorización está en curso. `src/main.js` es el punto de entrada; `src/app/createApp.js` monta y coordina la aplicación; `src/ui/markup.js` define el marcado y `src/ui/controls.js` conecta controles DOM con eventos del juego. La presentación y persistencia de puntuaciones viven en `src/ui/scoreBoard.js` y `src/scores/scoreRepository.js`. La escena Phaser vive en `src/game/scenes/SpaceScene.js`, su configuración en `src/game/createGame.js` y los nombres de eventos compartidos en `src/game/events.js`. El audio aún se coordina desde `createApp.js` y podría extraerse en la fase correspondiente. Inspecciona los archivos actuales antes de asumir qué fases o módulos existen.
 
 La estructura siguiente es el destino gradual de la refactorización, no describe archivos que necesariamente ya existan:
 

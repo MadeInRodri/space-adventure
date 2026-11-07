@@ -2,10 +2,10 @@ import Phaser from "phaser";
 import { SpaceScene } from "./scenes/SpaceScene.js";
 
 // Mantiene en un solo lugar la configuración y el montaje del juego.
-export function createGame() {
+export function createGame(parent = "game-canvas") {
   return new Phaser.Game({
     type: Phaser.AUTO,
-    parent: "game-canvas",
+    parent,
     width: 480,
     height: 480,
     backgroundColor: "#030811",

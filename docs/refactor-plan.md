@@ -164,29 +164,44 @@ Las casillas marcadas inicialmente se comprobaron en la compilación local con i
 - Al comenzar cada ronda, la página vuelve a sincronizar la preferencia de música con la escena para cubrir también cambios ocurridos durante la carga inicial.
 - `npm run build` pasa. La advertencia de bundle mayor a 500 kB persiste; la extracción modular no incorpora división de código.
 - En navegador se verificaron carga del canvas y récord existente, inicio, pausa, reanudación, alternancia de música, reinicio de una ronda y que el récord no cambiara durante la prueba.
-- La lista completa de regresión de gameplay de la fase 0 queda pendiente de volver a ejecutar tras la extracción.
+- El usuario completó la regresión manual restante tras la extracción: controles, movimiento, colisiones, vidas, monedas y fin de partida; reportó resultados positivos y ningún error.
 
 **Salida / criterio de aceptación**
 
 - [x] Phaser se crea mediante una sola función y la escena permanece responsable del ciclo de juego.
 - [x] La UI no necesita consultar campos internos de la escena para determinar el estado.
-- [ ] Completar la lista de regresión manual de la fase 0 tras la extracción, incluidos movimiento, controles táctiles, colisiones/vidas, monedas y fin de partida.
+- [x] Completar la lista de regresión manual de la fase 0 tras la extracción: controles, movimiento, colisiones/vidas, monedas y fin de partida.
 
 ### Fase 3 — Extraer UI y coordinador
 
 **Trabajo**
 
-1. Mover el template HTML a `ui/markup.js`.
-2. Mover las suscripciones de botones, teclado/táctil y actualización de etiquetas a `ui/controls.js`.
-3. Crear `app/createApp.js` para montar el marcado, iniciar Phaser y conectar acciones con eventos.
-4. Mantener `src/main.js` como punto de entrada pequeño.
-5. Asegurar que controladores de UI no llamen a métodos internos de `SpaceScene`; la comunicación pasa por la API/eventos de la aplicación.
+1. [x] Mover el template HTML a `ui/markup.js`.
+2. [x] Mover las suscripciones de botones, teclado/táctil y actualización de etiquetas a `ui/controls.js`.
+3. [x] Crear `app/createApp.js` para montar el marcado, iniciar Phaser y conectar acciones con eventos.
+4. [x] Mantener `src/main.js` como punto de entrada pequeño.
+5. [x] Asegurar que los controladores de UI no llamen a métodos internos de `SpaceScene`; la comunicación pasa por los eventos y el coordinador.
+6. [x] Proporcionar una función de desmontaje que retire listeners, detenga el audio y destruya Phaser; impedir el montaje duplicado en el mismo elemento raíz.
+
+**Resultados**
+
+- `src/ui/markup.js` contiene el marcado de la página sin lógica de aplicación.
+- `src/ui/controls.js` enlaza las acciones de la interfaz con los comandos/eventos compartidos y actualiza los estados visuales de los botones. También devuelve una función para retirar listeners.
+- `src/app/createApp.js` inicializa récords, juego y controles; coordina eventos de partida, audio de menú, bloqueo táctil y persistencia de resultados.
+- `src/main.js` se limita a cargar estilos e iniciar `createApp()`.
+- La interfaz no consulta directamente el estado ni los métodos de la escena.
+- `createApp` limita los selectores al contenedor recibido, impide inicializar dos veces el mismo contenedor y devuelve `destroy()` para retirar listeners, pausar el audio y liberar Phaser.
+- `npm run build` pasa. Persiste la advertencia conocida de bundle JavaScript mayor a 500 kB.
+- En navegador se verificaron los estados de inicio/pausa/reanudación/reinicio, el toggle táctil y de música, la conservación del récord existente y que existe un solo canvas.
+- Se probó crear, destruir y volver a crear una instancia en un contenedor separado: el segundo montaje produjo un canvas, el duplicado simultáneo fue rechazado y el desmontaje vació el contenedor. No se alteraron los récords.
+- Con un entorno táctil simulado se verificó que el pad inicia visible, que ocultarlo limpia direcciones y que el desmontaje elimina listeners del DOM y del emisor del juego.
+- `git diff --check` pasa y la interfaz no consulta directamente la escena ni incluye nombres de evento duplicados fuera de `game/events.js`.
 
 **Salida / criterio de aceptación**
 
-- La inicialización, la UI y el juego pueden leerse y cambiarse por separado.
-- Los botones conservan estados habilitados, etiquetas, atributos ARIA y comportamiento en móvil/escritorio.
-- El montaje no crea listeners ni instancias duplicadas.
+- [x] La inicialización, la UI y el juego pueden leerse y cambiarse por separado.
+- [x] Los botones conservan estados habilitados, etiquetas y atributos ARIA; se probaron flujos principales y el estado inicial táctil simulado.
+- [x] El montaje no crea listeners ni instancias duplicadas y el desmontaje libera sus recursos.
 
 ### Fase 4 — Centralizar audio y configuración
 

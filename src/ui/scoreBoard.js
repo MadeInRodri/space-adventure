@@ -1,8 +1,9 @@
-export function createScoreBoard(doc = document) {
-  // Recibe el documento para mantener el renderizado aislado del repositorio.
-  const scoresList = doc.querySelector("#scores-list");
-  const personalBestLabel = doc.querySelector("#personal-best");
-  const statsStatus = doc.querySelector("#stats-status");
+export function createScoreBoard(root = document.querySelector("#app")) {
+  const doc = root.ownerDocument;
+  // Limita las consultas al elemento de esta aplicación.
+  const scoresList = root.querySelector("#scores-list");
+  const personalBestLabel = root.querySelector("#personal-best");
+  const statsStatus = root.querySelector("#stats-status");
 
   function render(scores) {
     scoresList.replaceChildren();
