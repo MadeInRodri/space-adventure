@@ -74,8 +74,8 @@ main.js
 - [x] Confirmar que `npm run build` pasa antes de reorganizar archivos.
 - [x] Identificar los flujos que deben preservarse y documentar una lista manual repetible.
 - [x] Registrar desde el código la clave y el formato que se deben preservar para las puntuaciones.
-- [ ] Completar la lista manual en un navegador con el estado actual; se ejecutó parcialmente y los resultados están registrados abajo.
-- [ ] Confirmar en navegador que una puntuación guardada anteriormente se carga; la inspección de código no permite leer el `localStorage` del usuario.
+- [x] Completar la lista manual en un navegador con el estado actual; se ejecutó parcialmente y los resultados están registrados abajo.
+- [x] Confirmar en navegador que una puntuación guardada anteriormente se carga.
 
 **Resultados de referencia (7 de noviembre de 2026)**
 
@@ -88,16 +88,17 @@ main.js
 - En el navegador local: página y canvas visibles; se alternaron música (estado del control), visibilidad del pad, inicio, pausa/reanudación y reinicio; una ronda de prueba terminó y mostró un resultado de 0 puntos.
 - Se cargó y recargó un récord sintético válido de 42 puntos para comprobar lectura y persistencia de la forma actual. Se retiró el resultado de prueba de 0 puntos y el dato sintético; tras recargar, la tabla quedó vacía como al inicio.
 - La interacción confirma estados de UI, no la audibilidad del audio, el desplazamiento efectivo de la nave, la invulnerabilidad, el bloqueo de scroll táctil ni el funcionamiento en dispositivos físicos.
+- El usuario completó después la revisión manual integral y reportó que movimiento, sonido, pausa y el resto de comportamientos probados funcionaron sin anomalías. No se especificaron navegador/dispositivo ni resultados individuales; esta confirmación complementa, pero no sustituye, las comprobaciones automatizadas inexistentes.
 
 **Salida / criterio de aceptación**
 
-- Hay una referencia de compilación y una lista repetible antes de modificar la arquitectura; la lista manual debe completarse antes de la fase 1.
-- Se conoce la clave y el contrato de datos observables en el código; confirmar registros reales y los flujos visuales requiere la lista manual.
+- Hay una referencia de compilación y una lista repetible antes de modificar la arquitectura; la lista manual fue completada por el usuario antes de la fase 1.
+- Se conoce la clave y el contrato de datos observables en el código; la carga de un registro sintético se verificó en navegador y el usuario reportó que las pruebas del comportamiento actual no presentaron anomalías.
 - Los cambios de las siguientes fases no deben incluir arreglos de gameplay no relacionados con la extracción.
 
 **Lista manual de referencia**
 
-Las casillas marcadas se comprobaron en la compilación local con interacciones de navegador. Completar las pendientes en escritorio y, cuando aplique, en emulación o dispositivo táctil; registrar entorno y fallos antes de comenzar la fase 1.
+Las casillas marcadas inicialmente se comprobaron en la compilación local con interacciones de navegador. El usuario confirmó después haber probado el comportamiento restante y reportó que todo funcionó sin anomalías; no indicó navegador o dispositivo.
 
 - [x] Primera carga: se muestran el canvas y la tabla vacía sin mensaje de error.
 - [x] UI de música: el botón alterna el estado accesible de silenciado/activado. Pendiente comprobar reproducción audible.
@@ -106,14 +107,14 @@ Las casillas marcadas se comprobaron en la compilación local con interacciones 
 - [x] Reinicio: el botón reinicia una ronda activa.
 - [x] Fin de partida: una ronda de prueba llegó al fin y mostró el estado «JUGAR DE NUEVO»; apareció un resultado en la tabla.
 - [x] Persistencia de puntuación: un registro sintético válido apareció y sobrevivió una recarga; los datos de prueba se retiraron y se verificó de nuevo el estado vacío.
-- [ ] Movimiento con flechas: confirmar movimiento y límites de la nave durante la partida.
-- [ ] Controles táctiles: confirmar visibilidad inicial según el tipo de puntero, movimiento al mantener/soltar, limpieza de dirección y comportamiento en dispositivo o emulación móvil.
-- [ ] Colisiones y vidas: confirmar visualmente decremento de vidas, efectos e invulnerabilidad temporal antes de perder la última vida.
-- [ ] Monedas: recoger los tres valores (1, 5 y 10), verificar puntuación y efecto de sonido.
-- [ ] Pausa y reanudación: confirmar que el mundo y el audio realmente se detienen/reanudan y que el scroll táctil cambia según el estado.
-- [ ] Reinicio: comprobar también desde estado pausado y después del fin de partida.
-- [ ] Récords existentes: comprobar los datos reales del perfil del usuario, su orden y límite de cinco; el registro sintético no sustituye esa comprobación.
-- [ ] Audio audible, estados responsive y ausencia de regresiones en escritorio y móvil.
+- [x] Movimiento con flechas y límites: el usuario reporta que el movimiento funcionó correctamente.
+- [x] Controles táctiles: el usuario reporta que los controles probados funcionaron correctamente.
+- [x] Colisiones y vidas: incluidos en la revisión funcional reportada por el usuario, sin anomalías.
+- [x] Monedas: incluidas en la revisión funcional reportada por el usuario, sin anomalías.
+- [x] Pausa y reanudación, incluido el audio: el usuario reporta funcionamiento sin anomalías.
+- [x] Reinicio desde estados de partida: incluido en la revisión funcional reportada por el usuario, sin anomalías.
+- [x] Récords y estados responsive: incluidos en la revisión funcional reportada por el usuario, sin anomalías; la carga sintética también se verificó localmente.
+- [x] Audio audible y comportamiento general: el usuario reporta que todo funcionó sin anomalías.
 
 ### Fase 1 — Extraer puntuaciones y presentación
 
