@@ -267,11 +267,10 @@ Las nuevas mecánicas son funcionalidades posteriores a la separación; no son r
 
 **Dificultad**
 
-- Definir primero el comportamiento deseado: selección manual, progresión automática o ambas; niveles, límites y efecto sobre aparición/velocidad.
-- Modelar dificultad como configuración de gameplay explícita, no como constantes repartidas por la escena.
-- Hacer que un `difficultySystem` o función pura derive parámetros activos a partir de la configuración y del estado de partida. La escena/sistema de aparición consume dichos parámetros.
-- Mantener límites para que progresión por tiempo o puntuación no escale indefinidamente.
-- Si se agrega selección manual, la UI solo comunica la opción seleccionada; la regla y su validación pertenecen al juego/configuración.
+- [x] Definir tres opciones manuales y sus reglas: Principiante (3 vidas y un corazón cada 10 segundos mientras falte vida), Normal (3 vidas, sin regeneración) y Oneshot (1 vida, sin regeneración).
+- [x] Modelar la configuración por modo en `game/config/gameplay.js`; la escena valida la selección y la UI solo comunica y representa el modo activo.
+- [x] Bloquear la selección durante la partida y reactivarla al terminar. Las vidas y el HUD se inicializan según el modo seleccionado.
+- [x] Limitar la regeneración a 3 vidas; los corazones usan el sprite de vida existente, caen como objetos independientes y se recogen por contacto.
 
 **Curación**
 
@@ -286,8 +285,18 @@ Las nuevas mecánicas son funcionalidades posteriores a la separación; no son r
 - Preferir reglas puras o configurables para balanceo cuando facilite la validación; Phaser se reserva para sprites, temporizadores, animaciones y colisiones visuales.
 - Evitar que los sistemas se comuniquen por mutaciones ocultas entre sí. Las entradas, salidas y cambios de estado deben ser explícitos.
 
+**Resultados**
+
+- `GAMEPLAY_CONFIG.difficulty.modes` define las vidas y el intervalo de regeneración. Solo Principiante programa el temporizador; este se detiene al terminar y se reinicia al comenzar otra ronda.
+- La escena comprueba el máximo al aparecer y recoger corazones, actualiza el HUD y retira cada pickup recogido o que sale del área de juego. Cambiar de modo entre rondas actualiza las vidas iniciales sin modificar monedas ni puntuación.
+- La UI muestra los tres modos encima del canvas, mantiene el seleccionado mediante `aria-pressed` y bloquea los botones mientras la ronda está activa.
+- `npm run build` pasa. Se verifican los cambios de selección, bloqueo/desbloqueo, reglas de vidas y aparición/recogida de corazones.
+
 **Salida / criterio de aceptación**
 
+- [x] Los tres modos aplican la configuración de vidas y regeneración acordada.
+- [x] Los corazones de Principiante reaparecen cada 10 segundos si falta vida y nunca permiten superar 3.
+- [x] La UI representa y bloquea el modo activo durante la partida sin acoplarse a reglas de la escena.
 - Cada mecánica nueva puede añadirse sin ampliar indiscriminadamente `SpaceScene` ni acoplar la UI a las reglas.
 - Las reglas de salud, dificultad y recompensas tienen límites y casos de borde definidos antes de codificarse.
 
@@ -315,7 +324,7 @@ El orden recomendado es: **Fase 0 → Fase 1 → Fase 2 → Fase 3 → Fase 4 �
 - Migrar a React/Vue, TypeScript, un gestor global de estado o una arquitectura de plugins.
 - Cambiar el diseño, la economía de puntos, las claves/datos guardados o el balance actual como parte de una extracción.
 - Dividir CSS o la escena en numerosos módulos sin una necesidad surgida durante el trabajo.
-- Implementar dificultad o curación antes de que se acuerden sus reglas de gameplay.
+- Agregar mecánicas de dificultad o curación fuera de las reglas acordadas para esta fase sin definir primero su comportamiento.
 
 ## Documentación relacionada
 

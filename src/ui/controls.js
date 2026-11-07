@@ -46,6 +46,7 @@ export function bindGameControls(
   const pauseLabel = root.querySelector("#pause-label");
   const pauseIcon = root.querySelector("#pause-icon");
   const restartButton = root.querySelector("#restart-button");
+  const difficultyButtons = [...root.querySelectorAll(".difficulty-button")];
   const directionButtons = [...root.querySelectorAll(".direction-button")];
   const touchControls = root.querySelector("#touch-controls");
   const touchControlsToggle = root.querySelector("#touch-controls-toggle");
@@ -115,6 +116,11 @@ export function bindGameControls(
   listen(restartButton, "click", () => {
     game.events.emit(GAME_EVENTS.RESTART_GAME);
   });
+  difficultyButtons.forEach((button) => {
+    listen(button, "click", () => {
+      game.events.emit(GAME_EVENTS.SELECT_DIFFICULTY, button.dataset.difficulty);
+    });
+  });
 
   // La captura mantiene la dirección activa aunque el puntero salga del botón.
   directionButtons.forEach((button) => {
@@ -164,8 +170,20 @@ export function bindGameControls(
     playButton.classList.add("is-playing");
     pauseButton.disabled = false;
     restartButton.disabled = false;
+    difficultyButtons.forEach((button) => {
+      button.disabled = true;
+    });
     pauseLabel.textContent = "PAUSAR";
     showIconState(pauseIcon, "paused");
+  });
+
+  listenToGame(GAME_EVENTS.DIFFICULTY_CHANGED, (difficulty) => {
+    difficultyButtons.forEach((button) => {
+      button.setAttribute(
+        "aria-pressed",
+        String(button.dataset.difficulty === difficulty),
+      );
+    });
   });
 
   listenToGame(GAME_EVENTS.GAME_PAUSED, () => {
@@ -186,6 +204,9 @@ export function bindGameControls(
     playButton.disabled = false;
     playButton.classList.remove("is-playing");
     pauseButton.disabled = true;
+    difficultyButtons.forEach((button) => {
+      button.disabled = false;
+    });
   });
 
   return function unbindGameControls() {

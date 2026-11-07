@@ -9,6 +9,8 @@ export class SpaceScene extends Phaser.Scene {
     // Estado de la partida y colecciones de objetos que caen desde la parte superior.
     this.asteroids = [];
     this.coins = [];
+    this.hearts = [];
+    this.difficulty = GAMEPLAY_CONFIG.difficulty.defaultMode;
     this.lives = GAMEPLAY_CONFIG.initialLives;
     this.score = 0;
     this.running = false;
@@ -91,6 +93,11 @@ export class SpaceScene extends Phaser.Scene {
     this.loseSound = this.sound.add("lose-sound", { volume: 0.4 });
 
     this.game.events.on(GAME_EVENTS.START_GAME, this.startGame, this);
+    this.game.events.on(
+      GAME_EVENTS.SELECT_DIFFICULTY,
+      this.selectDifficulty,
+      this,
+    );
     this.game.events.on(GAME_EVENTS.PAUSE_GAME, this.pauseGame, this);
     this.game.events.on(GAME_EVENTS.RESUME_GAME, this.resumeGame, this);
     this.game.events.on(GAME_EVENTS.RESTART_GAME, this.restartGame, this);
@@ -115,6 +122,11 @@ export class SpaceScene extends Phaser.Scene {
   // Retira las suscripciones globales cuando Phaser destruye esta escena.
   onShutdown() {
     this.game.events.off(GAME_EVENTS.START_GAME, this.startGame, this);
+    this.game.events.off(
+      GAME_EVENTS.SELECT_DIFFICULTY,
+      this.selectDifficulty,
+      this,
+    );
     this.game.events.off(GAME_EVENTS.PAUSE_GAME, this.pauseGame, this);
     this.game.events.off(GAME_EVENTS.RESUME_GAME, this.resumeGame, this);
     this.game.events.off(GAME_EVENTS.RESTART_GAME, this.restartGame, this);
@@ -199,6 +211,19 @@ export class SpaceScene extends Phaser.Scene {
       .setDepth(5);
   }
 
+  // Solo cambia el modo entre rondas y sincroniza las vidas iniciales del HUD.
+  selectDifficulty(difficulty) {
+    const mode = GAMEPLAY_CONFIG.difficulty.modes[difficulty];
+    if (this.running || !mode) return;
+
+    this.difficulty = difficulty;
+    this.lives = mode.initialLives;
+    this.heartIcons.forEach((heart, index) =>
+      heart.setVisible(index < this.lives),
+    );
+    this.game.events.emit(GAME_EVENTS.DIFFICULTY_CHANGED, difficulty);
+  }
+
   // Inicia o reinicia la ronda, limpia objetos anteriores y programa sus apariciones.
   startGame() {
     if (this.running) return;
@@ -207,9 +232,12 @@ export class SpaceScene extends Phaser.Scene {
     this.paused = false;
     this.asteroids.forEach((item) => item.sprite.destroy());
     this.coins.forEach((item) => item.sprite.destroy());
+    this.hearts.forEach((item) => item.sprite.destroy());
     this.asteroids = [];
     this.coins = [];
-    this.lives = GAMEPLAY_CONFIG.initialLives;
+    this.hearts = [];
+    const mode = GAMEPLAY_CONFIG.difficulty.modes[this.difficulty];
+    this.lives = mode.initialLives;
     this.score = 0;
     this.invulnerable = false;
     this.running = true;
@@ -219,11 +247,15 @@ export class SpaceScene extends Phaser.Scene {
         GAMEPLAY_CONFIG.player.startY,
       )
       .setAlpha(1);
-    this.heartIcons.forEach((heart) => heart.setVisible(true));
+    this.heartIcons.forEach((heart, index) =>
+      heart.setVisible(index < this.lives),
+    );
     this.scoreLabel.setText("00000");
     this.prompt.setText("").setFontSize(12);
     this.asteroidTimer?.remove();
     this.coinTimer?.remove();
+    this.healingHeartTimer?.remove();
+    this.healingHeartTimer = undefined;
     this.asteroidTimer = this.time.addEvent({
       delay: GAMEPLAY_CONFIG.spawning.asteroidDelay,
       callback: this.spawnAsteroid,
@@ -236,6 +268,14 @@ export class SpaceScene extends Phaser.Scene {
       callbackScope: this,
       loop: true,
     });
+    if (mode.regenerationInterval) {
+      this.healingHeartTimer = this.time.addEvent({
+        delay: mode.regenerationInterval,
+        callback: this.spawnHealingHeart,
+        callbackScope: this,
+        loop: true,
+      });
+    }
     if (this.musicEnabled) this.music.play();
     this.game.events.emit(GAME_EVENTS.GAME_STARTED);
   }
@@ -336,6 +376,25 @@ export class SpaceScene extends Phaser.Scene {
     });
   }
 
+  // En Principiante aparece como máximo un corazón por intervalo y solo si falta vida.
+  spawnHealingHeart() {
+    const mode = GAMEPLAY_CONFIG.difficulty.modes[this.difficulty];
+    if (!this.running || this.lives >= mode.maximumLives) return;
+
+    const sprite = this.add
+      .image(
+        Phaser.Math.Between(...GAMEPLAY_CONFIG.spawning.coinX),
+        -24,
+        "heart",
+      )
+      .setDisplaySize(26, 26)
+      .setDepth(2);
+    this.hearts.push({
+      sprite,
+      speed: Phaser.Math.Between(...GAMEPLAY_CONFIG.spawning.healingHeartSpeed),
+    });
+  }
+
   // Se ejecuta cada frame: desplaza el fondo, controla la nave y actualiza objetos.
   update(_time, delta) {
     this.background.tilePositionY -= delta * (this.running ? 0.035 : 0.012);
@@ -362,10 +421,13 @@ export class SpaceScene extends Phaser.Scene {
     );
 
     this.updateFallingObjects(this.asteroids, delta, "asteroid");
+    // Evita recoger una cura en el mismo frame que termina la partida.
+    if (!this.running) return;
     this.updateFallingObjects(this.coins, delta, "coin");
+    this.updateFallingObjects(this.hearts, delta, "heart");
   }
 
-  // Mueve monedas y asteroides, resuelve recogidas/choques y retira objetos vencidos.
+  // Mueve los objetos que caen, resuelve sus contactos y retira los vencidos.
   updateFallingObjects(items, delta, type) {
     const speedScale =
       1 +
@@ -388,6 +450,20 @@ export class SpaceScene extends Phaser.Scene {
         item.sprite.destroy();
         item.collected = true;
       } else if (
+        type === "heart" &&
+        this.isTouching(
+          item.sprite,
+          GAMEPLAY_CONFIG.collision.healingHeartRadius,
+        )
+      ) {
+        const mode = GAMEPLAY_CONFIG.difficulty.modes[this.difficulty];
+        if (this.lives < mode.maximumLives) {
+          this.lives += 1;
+          this.heartIcons[this.lives - 1]?.setVisible(true);
+        }
+        item.sprite.destroy();
+        item.collected = true;
+      } else if (
         type === "asteroid" &&
         !this.invulnerable &&
         this.isTouching(
@@ -406,11 +482,16 @@ export class SpaceScene extends Phaser.Scene {
     });
 
     const finished = (item) => item.collected || item.hit || item.expired;
-    if (type === "asteroid") {
-      this.asteroids = this.asteroids.filter((item) => !finished(item));
-    } else {
-      this.coins = this.coins.filter((item) => !finished(item));
-    }
+    const collection =
+      type === "asteroid"
+        ? this.asteroids
+        : type === "coin"
+          ? this.coins
+          : this.hearts;
+    const remaining = collection.filter((item) => !finished(item));
+    if (type === "asteroid") this.asteroids = remaining;
+    else if (type === "coin") this.coins = remaining;
+    else this.hearts = remaining;
   }
 
   // Comprueba la colisión circular entre la nave y un objeto según su radio efectivo.
@@ -466,6 +547,8 @@ export class SpaceScene extends Phaser.Scene {
     this.paused = false;
     this.asteroidTimer?.remove();
     this.coinTimer?.remove();
+    this.healingHeartTimer?.remove();
+    this.healingHeartTimer = undefined;
     this.music.stop();
     this.loseSound.play();
     this.prompt.setText(

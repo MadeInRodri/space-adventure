@@ -8,6 +8,21 @@ export const GAME_MARKUP = `
     </header>
 
     <section class="game-section" aria-label="Videojuego SpaceAdventure">
+      <div class="difficulty-selector" role="group" aria-label="Elegir dificultad">
+        <button class="difficulty-button" type="button" data-difficulty="beginner" aria-pressed="false">
+          <span>Principiante</span>
+          <span class="difficulty-detail">3 vidas · corazón cada 10 s</span>
+        </button>
+        <button class="difficulty-button" type="button" data-difficulty="normal" aria-pressed="true">
+          <span>Normal</span>
+          <span class="difficulty-detail">3 vidas</span>
+        </button>
+        <button class="difficulty-button" type="button" data-difficulty="oneshot" aria-pressed="false">
+          <span>Oneshot</span>
+          <span class="difficulty-detail">1 vida</span>
+        </button>
+      </div>
+
       <div class="game-shell">
         <span class="corner corner-top-left" aria-hidden="true"></span>
         <span class="corner corner-top-right" aria-hidden="true"></span>

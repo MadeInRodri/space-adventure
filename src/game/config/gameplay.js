@@ -16,6 +16,7 @@ export const GAMEPLAY_CONFIG = Object.freeze({
   spawning: Object.freeze({
     asteroidDelay: 720,
     coinDelay: 1050,
+    healingHeartSpeed: Object.freeze([105, 155]),
     asteroidSize: Object.freeze([32, 58]),
     asteroidX: Object.freeze([28, 452]),
     asteroidSpeed: Object.freeze([125, 205]),
@@ -27,11 +28,28 @@ export const GAMEPLAY_CONFIG = Object.freeze({
   collision: Object.freeze({
     asteroidScale: 0.34,
     coinRadius: 22,
+    healingHeartRadius: 22,
   }),
   cleanup: Object.freeze({
     removeBelowY: 510,
   }),
   difficulty: Object.freeze({
+    defaultMode: "normal",
+    modes: Object.freeze({
+      beginner: Object.freeze({
+        initialLives: 3,
+        maximumLives: 3,
+        regenerationInterval: 10000,
+      }),
+      normal: Object.freeze({
+        initialLives: 3,
+        maximumLives: 3,
+      }),
+      oneshot: Object.freeze({
+        initialLives: 1,
+        maximumLives: 1,
+      }),
+    }),
     maxBonus: 0.45,
     scoreStep: 200,
   }),
