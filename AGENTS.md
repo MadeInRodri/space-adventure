@@ -39,6 +39,7 @@ Al trabajar durante la transición:
 
 - No asumas que la estructura objetivo ya fue implementada. Inspecciona el estado real antes de editar.
 - Si una solicitud no incluye refactorización, realiza el cambio en la estructura existente y evita mezclar una reorganización amplia con una corrección o funcionalidad.
+- Al crear o modificar lógica JavaScript, aplica la skill `.github/skills/document-code-logic` para documentar en español las decisiones y comportamientos no obvios con comentarios breves; evita comentar instrucciones evidentes.
 - Al refactorizar, extrae responsabilidades de forma incremental y conserva el comportamiento visible y las mecánicas actuales.
 - Mantén límites claros: la escena gestiona la partida; el repositorio de puntuaciones gestiona validación y almacenamiento; la UI representa datos y emite acciones; el coordinador conecta UI y juego; el controlador de audio coordina reproducción y silencio.
 - Evita que la escena manipule el DOM o `localStorage`, y evita que los controladores de UI dependan directamente de detalles internos de la escena. Usa eventos o una API explícita del coordinador para comunicar componentes.

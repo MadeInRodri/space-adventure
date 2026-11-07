@@ -94,7 +94,7 @@ const gameMarkup = `
 
 document.querySelector("#app").innerHTML = gameMarkup;
 
-// RÉCORDS: el repositorio gestiona datos y el marcador se encarga de representarlos.
+// Carga los récords una vez y conserva separados almacenamiento y presentación.
 const scoreRepository = createScoreRepository();
 const scoreBoard = createScoreBoard();
 const initialScores = scoreRepository.load();
@@ -646,6 +646,7 @@ game.events.on("game-resumed", () => {
 });
 
 game.events.on("game-over", (score) => {
+  // La escena entrega el resultado; aquí se persiste y se actualiza la interfaz.
   const result = scoreRepository.save(score);
   if (result.error) {
     scoreBoard.setStatus(

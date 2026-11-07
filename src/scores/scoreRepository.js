@@ -1,6 +1,8 @@
+// Conserva la clave de almacenamiento para mantener los récords ya guardados.
 const SCORE_STORAGE_KEY = "space-adventure-high-scores";
 
 function sortScores(scores) {
+  // En caso de empate, prioriza el récord obtenido más recientemente.
   return [...scores].sort(
     (first, second) =>
       second.score - first.score ||
@@ -10,6 +12,7 @@ function sortScores(scores) {
 }
 
 function isValidScoreEntry(entry) {
+  // Descarta registros incompletos o incompatibles antes de agregarlos al historial.
   return (
     Number.isSafeInteger(entry?.score) &&
     entry.score >= 0 &&
@@ -21,6 +24,7 @@ function isValidScoreEntry(entry) {
 export function createScoreRepository(
   getStorage = () => globalThis.localStorage,
 ) {
+  // Permite sustituir localStorage al probar la persistencia.
   let savedScores = [];
 
   return {
@@ -45,6 +49,7 @@ export function createScoreRepository(
         );
         return { scores: savedScores, error: null };
       } catch (error) {
+        // Mantiene disponible el juego aunque los datos guardados no se lean.
         console.error("No se pudieron cargar las puntuaciones guardadas.", error);
         savedScores = [];
         return { scores: savedScores, error };
@@ -62,6 +67,7 @@ export function createScoreRepository(
         savedScores = updatedScores;
         return { scores: savedScores, error: null };
       } catch (error) {
+        // Conserva el último estado válido si falla la escritura en el navegador.
         console.error(
           "No se pudo guardar la puntuación en el almacenamiento local.",
           error,

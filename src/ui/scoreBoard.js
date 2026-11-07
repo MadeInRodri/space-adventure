@@ -1,4 +1,5 @@
 export function createScoreBoard(doc = document) {
+  // Recibe el documento para mantener el renderizado aislado del repositorio.
   const scoresList = doc.querySelector("#scores-list");
   const personalBestLabel = doc.querySelector("#personal-best");
   const statsStatus = doc.querySelector("#stats-status");
@@ -11,6 +12,7 @@ export function createScoreBoard(doc = document) {
     );
 
     if (scores.length === 0) {
+      // Informa el estado vacío sin dejar filas antiguas en la tabla.
       const row = doc.createElement("tr");
       const cell = doc.createElement("td");
       cell.colSpan = 3;
