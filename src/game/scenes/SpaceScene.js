@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { GAME_EVENTS } from "../events.js";
+import { GAMEPLAY_CONFIG } from "../config/gameplay.js";
 
 // Escena principal: contiene el estado y las reglas de cada partida.
 export class SpaceScene extends Phaser.Scene {
@@ -8,7 +9,7 @@ export class SpaceScene extends Phaser.Scene {
     // Estado de la partida y colecciones de objetos que caen desde la parte superior.
     this.asteroids = [];
     this.coins = [];
-    this.lives = 3;
+    this.lives = GAMEPLAY_CONFIG.initialLives;
     this.score = 0;
     this.running = false;
     this.paused = false;
@@ -59,8 +60,15 @@ export class SpaceScene extends Phaser.Scene {
     this.createHud();
 
     this.player = this.add
-      .image(240, 390, "ship")
-      .setDisplaySize(44, 44)
+      .image(
+        GAMEPLAY_CONFIG.player.startX,
+        GAMEPLAY_CONFIG.player.startY,
+        "ship",
+      )
+      .setDisplaySize(
+        GAMEPLAY_CONFIG.player.width,
+        GAMEPLAY_CONFIG.player.height,
+      )
       .setDepth(3);
     this.cursors = this.input.keyboard.createCursorKeys();
 
@@ -159,14 +167,16 @@ export class SpaceScene extends Phaser.Scene {
     });
   }
 
-  // Dibuja las tres vidas y el marcador de puntos en la capa superior del canvas.
+  // Dibuja las vidas configuradas y el marcador de puntos en el canvas.
   createHud() {
-    this.heartIcons = [0, 1, 2].map((index) =>
-      this.add
-        .image(28 + index * 23, 29, "heart")
-        .setOrigin(0.5)
-        .setScale(1.7)
-        .setDepth(5),
+    this.heartIcons = Array.from(
+      { length: GAMEPLAY_CONFIG.initialLives },
+      (_, index) =>
+        this.add
+          .image(28 + index * 23, 29, "heart")
+          .setOrigin(0.5)
+          .setScale(1.7)
+          .setDepth(5),
     );
 
     this.add
@@ -199,24 +209,29 @@ export class SpaceScene extends Phaser.Scene {
     this.coins.forEach((item) => item.sprite.destroy());
     this.asteroids = [];
     this.coins = [];
-    this.lives = 3;
+    this.lives = GAMEPLAY_CONFIG.initialLives;
     this.score = 0;
     this.invulnerable = false;
     this.running = true;
-    this.player.setPosition(240, 390).setAlpha(1);
+    this.player
+      .setPosition(
+        GAMEPLAY_CONFIG.player.startX,
+        GAMEPLAY_CONFIG.player.startY,
+      )
+      .setAlpha(1);
     this.heartIcons.forEach((heart) => heart.setVisible(true));
     this.scoreLabel.setText("00000");
     this.prompt.setText("").setFontSize(12);
     this.asteroidTimer?.remove();
     this.coinTimer?.remove();
     this.asteroidTimer = this.time.addEvent({
-      delay: 720,
+      delay: GAMEPLAY_CONFIG.spawning.asteroidDelay,
       callback: this.spawnAsteroid,
       callbackScope: this,
       loop: true,
     });
     this.coinTimer = this.time.addEvent({
-      delay: 1050,
+      delay: GAMEPLAY_CONFIG.spawning.coinDelay,
       callback: this.spawnCoin,
       callbackScope: this,
       loop: true,
@@ -277,10 +292,12 @@ export class SpaceScene extends Phaser.Scene {
   spawnAsteroid() {
     if (!this.running) return;
 
-    const size = Phaser.Math.Between(32, 58);
+    const size = Phaser.Math.Between(
+      ...GAMEPLAY_CONFIG.spawning.asteroidSize,
+    );
     const sprite = this.add
       .image(
-        Phaser.Math.Between(28, 452),
+        Phaser.Math.Between(...GAMEPLAY_CONFIG.spawning.asteroidX),
         -size,
         "asteroids",
         Phaser.Math.Between(0, 3),
@@ -290,8 +307,8 @@ export class SpaceScene extends Phaser.Scene {
     this.asteroids.push({
       sprite,
       size,
-      speed: Phaser.Math.Between(125, 205),
-      spin: Phaser.Math.FloatBetween(-1.2, 1.2),
+      speed: Phaser.Math.Between(...GAMEPLAY_CONFIG.spawning.asteroidSpeed),
+      spin: Phaser.Math.FloatBetween(...GAMEPLAY_CONFIG.spawning.asteroidSpin),
     });
   }
 
@@ -299,14 +316,24 @@ export class SpaceScene extends Phaser.Scene {
   spawnCoin() {
     if (!this.running) return;
 
-    const value = Phaser.Utils.Array.GetRandom([1, 1, 1, 5, 5, 10]);
+    const value = Phaser.Utils.Array.GetRandom(
+      GAMEPLAY_CONFIG.spawning.coinValues,
+    );
     const key = `coin-${value}`;
     const sprite = this.add
-      .sprite(Phaser.Math.Between(25, 455), -24, key)
+      .sprite(
+        Phaser.Math.Between(...GAMEPLAY_CONFIG.spawning.coinX),
+        -24,
+        key,
+      )
       .setDisplaySize(34, 34)
       .setDepth(2)
       .play(key);
-    this.coins.push({ sprite, value, speed: Phaser.Math.Between(105, 155) });
+    this.coins.push({
+      sprite,
+      value,
+      speed: Phaser.Math.Between(...GAMEPLAY_CONFIG.spawning.coinSpeed),
+    });
   }
 
   // Se ejecuta cada frame: desplaza el fondo, controla la nave y actualiza objetos.
@@ -314,7 +341,7 @@ export class SpaceScene extends Phaser.Scene {
     this.background.tilePositionY -= delta * (this.running ? 0.035 : 0.012);
     if (!this.running) return;
 
-    const movement = (delta / 1000) * 245;
+    const movement = (delta / 1000) * GAMEPLAY_CONFIG.player.speed;
     if (this.cursors.left.isDown || this.touchDirections.has("left"))
       this.player.x -= movement;
     if (this.cursors.right.isDown || this.touchDirections.has("right"))
@@ -323,8 +350,16 @@ export class SpaceScene extends Phaser.Scene {
       this.player.y -= movement;
     if (this.cursors.down.isDown || this.touchDirections.has("down"))
       this.player.y += movement;
-    this.player.x = Phaser.Math.Clamp(this.player.x, 24, 456);
-    this.player.y = Phaser.Math.Clamp(this.player.y, 42, 456);
+    this.player.x = Phaser.Math.Clamp(
+      this.player.x,
+      GAMEPLAY_CONFIG.player.minX,
+      GAMEPLAY_CONFIG.player.maxX,
+    );
+    this.player.y = Phaser.Math.Clamp(
+      this.player.y,
+      GAMEPLAY_CONFIG.player.minY,
+      GAMEPLAY_CONFIG.player.maxY,
+    );
 
     this.updateFallingObjects(this.asteroids, delta, "asteroid");
     this.updateFallingObjects(this.coins, delta, "coin");
@@ -332,13 +367,21 @@ export class SpaceScene extends Phaser.Scene {
 
   // Mueve monedas y asteroides, resuelve recogidas/choques y retira objetos vencidos.
   updateFallingObjects(items, delta, type) {
-    const speedScale = 1 + Math.min(this.score / 200, 0.45);
+    const speedScale =
+      1 +
+      Math.min(
+        this.score / GAMEPLAY_CONFIG.difficulty.scoreStep,
+        GAMEPLAY_CONFIG.difficulty.maxBonus,
+      );
     items.forEach((item) => {
       item.sprite.y += (item.speed * speedScale * delta) / 1000;
       if (type === "asteroid")
         item.sprite.rotation += (item.spin * delta) / 1000;
 
-      if (type === "coin" && this.isTouching(item.sprite, 22)) {
+      if (
+        type === "coin" &&
+        this.isTouching(item.sprite, GAMEPLAY_CONFIG.collision.coinRadius)
+      ) {
         this.score += item.value;
         this.scoreLabel.setText(String(this.score).padStart(5, "0"));
         this.coinSound.play();
@@ -347,12 +390,16 @@ export class SpaceScene extends Phaser.Scene {
       } else if (
         type === "asteroid" &&
         !this.invulnerable &&
-        this.isTouching(item.sprite, item.size * 0.34 + 13)
+        this.isTouching(
+          item.sprite,
+          item.size * GAMEPLAY_CONFIG.collision.asteroidScale +
+            GAMEPLAY_CONFIG.player.collisionRadius,
+        )
       ) {
         item.sprite.destroy();
         item.hit = true;
         this.loseLife();
-      } else if (item.sprite.y > 510) {
+      } else if (item.sprite.y > GAMEPLAY_CONFIG.cleanup.removeBelowY) {
         item.sprite.destroy();
         item.expired = true;
       }

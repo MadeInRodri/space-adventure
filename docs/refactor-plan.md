@@ -187,7 +187,7 @@ Las casillas marcadas inicialmente se comprobaron en la compilación local con i
 
 - `src/ui/markup.js` contiene el marcado de la página sin lógica de aplicación.
 - `src/ui/controls.js` enlaza las acciones de la interfaz con los comandos/eventos compartidos y actualiza los estados visuales de los botones. También devuelve una función para retirar listeners.
-- `src/app/createApp.js` inicializa récords, juego y controles; coordina eventos de partida, audio de menú, bloqueo táctil y persistencia de resultados.
+- `src/app/createApp.js` inicializa récords, juego y controles; coordina eventos de partida, bloqueo táctil y persistencia de resultados, delegando el audio en su controlador.
 - `src/main.js` se limita a cargar estilos e iniciar `createApp()`.
 - La interfaz no consulta directamente el estado ni los métodos de la escena.
 - `createApp` limita los selectores al contenedor recibido, impide inicializar dos veces el mismo contenedor y devuelve `destroy()` para retirar listeners, pausar el audio y liberar Phaser.
@@ -207,15 +207,24 @@ Las casillas marcadas inicialmente se comprobaron en la compilación local con i
 
 **Trabajo**
 
-1. Extraer la reproducción de audio del menú y la coordinación con la música del juego a `audio/audioController.js`.
-2. Mantener el audio sincronizado con los eventos de inicio, pausa, reanudación, reinicio y fin de partida.
-3. Reunir valores de gameplay que ya son parámetros coherentes en `game/config/gameplay.js` (por ejemplo, vidas iniciales, velocidad de movimiento y rangos de aparición).
-4. Mantener los valores de presentación dentro de sus módulos de UI/escena cuando no sean reglas compartidas.
+1. [x] Extraer la reproducción de audio del menú y la coordinación con la música del juego a `audio/audioController.js`.
+2. [x] Mantener el audio sincronizado con los eventos de inicio, pausa, reanudación, reinicio y fin de partida.
+3. [x] Reunir valores de gameplay que ya son parámetros coherentes en `game/config/gameplay.js` (por ejemplo, vidas iniciales, velocidad de movimiento y rangos de aparición).
+4. [x] Mantener los valores de presentación dentro de sus módulos de UI/escena cuando no sean reglas compartidas.
+
+**Resultados**
+
+- `src/audio/audioController.js` es propietario de la música de menú y la preferencia de silencio; escucha los eventos compartidos para detener/reanudar música y sincronizar el silencio con la escena.
+- `src/app/createApp.js` delega el audio al controlador y lo destruye junto con Phaser, sin mantener un segundo estado de música.
+- `src/game/config/gameplay.js` reúne vidas, movimiento, aparición, colisiones, limpieza y progresión de velocidad. El HUD crea el mismo número de iconos de vida que la configuración inicial.
+- Se conservaron los valores de gameplay existentes; las dimensiones de pantalla, animaciones y volúmenes siguen junto a su presentación/audio.
+- `npm run build` pasa; permanece la advertencia conocida de bundle JavaScript superior a 500 kB. `git diff --check` pasa.
+- En navegador se verificaron inicio, pausa, reanudación y reinicio; el registro de récords cargado permaneció sin cambios. El ciclo de eventos del controlador se comprobó también con un emisor/audio aislado, incluido fin de partida, silencio y destrucción.
 
 **Salida / criterio de aceptación**
 
-- La música se detiene, reanuda y silencia con el mismo comportamiento observado en la fase 0.
-- Las reglas configurables tienen una fuente de verdad y no cambian inadvertidamente la dificultad existente.
+- [x] La música se detiene, reanuda y silencia con el mismo comportamiento observado en la fase 0.
+- [x] Las reglas configurables tienen una fuente de verdad y no cambian inadvertidamente la dificultad existente.
 
 ### Fase 5 — Preparar y añadir nuevas mecánicas
 
