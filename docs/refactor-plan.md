@@ -71,15 +71,49 @@ main.js
 
 **Trabajo**
 
-- Confirmar que `npm run build` pasa antes de reorganizar archivos.
-- Registrar los flujos que se deben preservar: primera carga, música de menú, inicio, movimiento con flechas y controles táctiles, colisión e invulnerabilidad, monedas, pausa/reanudación, reinicio, fin de partida, puntuaciones y silencio.
-- Anotar el formato y la clave existente de puntuaciones: `space-adventure-high-scores`; comprobar compatibilidad con datos válidos ya guardados.
-- Crear una lista de verificación manual repetible. No afirmar que existen pruebas automatizadas mientras no se configuren.
+- [x] Confirmar que `npm run build` pasa antes de reorganizar archivos.
+- [x] Identificar los flujos que deben preservarse y documentar una lista manual repetible.
+- [x] Registrar desde el código la clave y el formato que se deben preservar para las puntuaciones.
+- [ ] Completar la lista manual en un navegador con el estado actual; se ejecutó parcialmente y los resultados están registrados abajo.
+- [ ] Confirmar en navegador que una puntuación guardada anteriormente se carga; la inspección de código no permite leer el `localStorage` del usuario.
+
+**Resultados de referencia (7 de noviembre de 2026)**
+
+- `npm run build`: correcto con Vite 8.3.4; generó la compilación de producción.
+- Vite informa que el bundle JavaScript principal mide aproximadamente 1,390.93 kB minificado y supera el umbral de advertencia de 500 kB. Se registra como advertencia preexistente, no como fallo ni como alcance de esta fase.
+- No hay pruebas automatizadas configuradas en `package.json`.
+- Clave de almacenamiento: `space-adventure-high-scores`.
+- Formato que admite el código: arreglo JSON de objetos con `score` entero seguro no negativo y `achievedAt` de tipo string interpretable como fecha. Al cargar, filtra entradas inválidas, ordena por puntuación descendente y, en empate, por fecha más reciente; conserva como máximo cinco. La compatibilidad con datos reales del navegador sigue pendiente de comprobación manual.
+- Los flujos de partida se conectan mediante eventos de Phaser como `start-game`, `touch-direction`, `clear-touch-directions`, `game-started`, `game-paused`, `game-resumed` y `game-over`.
+- En el navegador local: página y canvas visibles; se alternaron música (estado del control), visibilidad del pad, inicio, pausa/reanudación y reinicio; una ronda de prueba terminó y mostró un resultado de 0 puntos.
+- Se cargó y recargó un récord sintético válido de 42 puntos para comprobar lectura y persistencia de la forma actual. Se retiró el resultado de prueba de 0 puntos y el dato sintético; tras recargar, la tabla quedó vacía como al inicio.
+- La interacción confirma estados de UI, no la audibilidad del audio, el desplazamiento efectivo de la nave, la invulnerabilidad, el bloqueo de scroll táctil ni el funcionamiento en dispositivos físicos.
 
 **Salida / criterio de aceptación**
 
-- Hay una referencia de compilación y una lista clara de comportamiento actual antes de modificar la arquitectura.
-- Se conoce el alcance de cada cambio y no se mezclan arreglos de gameplay no relacionados con la extracción.
+- Hay una referencia de compilación y una lista repetible antes de modificar la arquitectura; la lista manual debe completarse antes de la fase 1.
+- Se conoce la clave y el contrato de datos observables en el código; confirmar registros reales y los flujos visuales requiere la lista manual.
+- Los cambios de las siguientes fases no deben incluir arreglos de gameplay no relacionados con la extracción.
+
+**Lista manual de referencia**
+
+Las casillas marcadas se comprobaron en la compilación local con interacciones de navegador. Completar las pendientes en escritorio y, cuando aplique, en emulación o dispositivo táctil; registrar entorno y fallos antes de comenzar la fase 1.
+
+- [x] Primera carga: se muestran el canvas y la tabla vacía sin mensaje de error.
+- [x] UI de música: el botón alterna el estado accesible de silenciado/activado. Pendiente comprobar reproducción audible.
+- [x] UI de partida: iniciar actualiza el estado de los botones; pausa y reanudación cambian sus etiquetas.
+- [x] UI táctil: en escritorio, el botón muestra y oculta el pad.
+- [x] Reinicio: el botón reinicia una ronda activa.
+- [x] Fin de partida: una ronda de prueba llegó al fin y mostró el estado «JUGAR DE NUEVO»; apareció un resultado en la tabla.
+- [x] Persistencia de puntuación: un registro sintético válido apareció y sobrevivió una recarga; los datos de prueba se retiraron y se verificó de nuevo el estado vacío.
+- [ ] Movimiento con flechas: confirmar movimiento y límites de la nave durante la partida.
+- [ ] Controles táctiles: confirmar visibilidad inicial según el tipo de puntero, movimiento al mantener/soltar, limpieza de dirección y comportamiento en dispositivo o emulación móvil.
+- [ ] Colisiones y vidas: confirmar visualmente decremento de vidas, efectos e invulnerabilidad temporal antes de perder la última vida.
+- [ ] Monedas: recoger los tres valores (1, 5 y 10), verificar puntuación y efecto de sonido.
+- [ ] Pausa y reanudación: confirmar que el mundo y el audio realmente se detienen/reanudan y que el scroll táctil cambia según el estado.
+- [ ] Reinicio: comprobar también desde estado pausado y después del fin de partida.
+- [ ] Récords existentes: comprobar los datos reales del perfil del usuario, su orden y límite de cinco; el registro sintético no sustituye esa comprobación.
+- [ ] Audio audible, estados responsive y ausencia de regresiones en escritorio y móvil.
 
 ### Fase 1 — Extraer puntuaciones y presentación
 
