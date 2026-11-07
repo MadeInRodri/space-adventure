@@ -120,16 +120,27 @@ Las casillas marcadas inicialmente se comprobaron en la compilación local con i
 
 **Trabajo**
 
-1. Mover lectura, validación, ordenamiento y persistencia a `scores/scoreRepository.js`.
-2. Separar el renderizado de la tabla y récord personal en `ui/scoreBoard.js`.
-3. Hacer que la aplicación entregue el resultado de una partida al repositorio y notifique a la tabla; la escena no debe llamar a `localStorage` ni renderizar puntuaciones.
-4. Conservar el manejo explícito de errores y los mensajes actuales de carga/guardado.
+1. [x] Mover lectura, validación, ordenamiento y persistencia a `scores/scoreRepository.js`.
+2. [x] Separar el renderizado de la tabla y récord personal en `ui/scoreBoard.js`.
+3. [x] Hacer que la aplicación entregue el resultado de una partida al repositorio y notifique a la tabla; la escena no debe llamar a `localStorage` ni renderizar puntuaciones.
+4. [x] Conservar el manejo explícito de errores y los mensajes actuales de carga/guardado.
+
+**Resultados**
+
+- `src/scores/scoreRepository.js` encapsula la clave existente, la validación del formato, el orden por puntuación/fecha, el límite de cinco y lectura/escritura. Acepta un proveedor de almacenamiento inyectable para verificar su lógica sin modificar el `localStorage` del navegador.
+- `src/ui/scoreBoard.js` se ocupa exclusivamente de mostrar el récord, las filas de la tabla y el estado accesible.
+- `src/main.js` coordina ambos módulos al cargar y al recibir `game-over`; `SpaceScene.endGame()` ya solo emite la puntuación y no conoce almacenamiento ni DOM.
+- Los errores de lectura/escritura siguen registrados en consola y producen los mensajes de estado que existían.
+- La lógica del repositorio se verificó con almacenamiento en memoria: carga vacía, filtrado de entradas no válidas, orden y límite de cinco, persistencia bajo la clave actual, carga con JSON inválido y errores de almacenamiento.
+- En una carga de navegador sin iniciar una partida, el marcador mostró correctamente el récord ya existente de 48 puntos. Esta verificación fue de solo lectura y no modificó los datos del usuario.
+- `npm run build` pasa después de la extracción. La advertencia previa de tamaño de bundle se mantiene y no fue introducida por esta fase.
+- No se modificó ni migró el formato o los datos guardados existentes.
 
 **Salida / criterio de aceptación**
 
-- Los cinco mejores resultados conservan el orden y las fechas actuales.
-- Datos guardados válidos siguen cargándose; datos inválidos no rompen el inicio del juego y el error sigue siendo visible.
-- La escena termina una partida y comunica su puntuación sin conocer el repositorio ni el DOM.
+- [x] Los cinco mejores resultados conservan el orden y las fechas actuales.
+- [x] Datos guardados válidos siguen cargándose; datos inválidos no rompen el inicio del juego y el error sigue siendo visible.
+- [x] La escena termina una partida y comunica su puntuación sin conocer el repositorio ni el DOM.
 
 ### Fase 2 — Extraer juego Phaser y eventos
 

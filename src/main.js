@@ -1,5 +1,7 @@
 import Phaser from "phaser";
 import "./style.css";
+import { createScoreRepository } from "./scores/scoreRepository.js";
+import { createScoreBoard } from "./ui/scoreBoard.js";
 
 // INTERFAZ: estructura de la página que envuelve el canvas de Phaser y sus controles.
 const gameMarkup = `
@@ -92,109 +94,13 @@ const gameMarkup = `
 
 document.querySelector("#app").innerHTML = gameMarkup;
 
-// RÉCORDS: conserva las cinco mejores puntuaciones en el navegador del jugador.
-const SCORE_STORAGE_KEY = "space-adventure-high-scores";
-const scoresList = document.querySelector("#scores-list");
-const personalBestLabel = document.querySelector("#personal-best");
-const statsStatus = document.querySelector("#stats-status");
-
-function sortScores(scores) {
-  return scores.sort(
-    (first, second) =>
-      second.score - first.score ||
-      new Date(second.achievedAt).getTime() -
-        new Date(first.achievedAt).getTime(),
-  );
-}
-
-function renderScores(scores) {
-  scoresList.replaceChildren();
-  personalBestLabel.textContent = String(scores[0]?.score ?? 0).padStart(
-    5,
-    "0",
-  );
-
-  if (scores.length === 0) {
-    const row = document.createElement("tr");
-    const cell = document.createElement("td");
-    cell.colSpan = 3;
-    cell.className = "empty-scores";
-    cell.textContent = "AÚN NO HAY MISIONES REGISTRADAS";
-    row.append(cell);
-    scoresList.append(row);
-    return;
-  }
-
-  const dateFormatter = new Intl.DateTimeFormat("es-MX", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
-
-  scores.forEach((entry, index) => {
-    const row = document.createElement("tr");
-    const rank = document.createElement("td");
-    const score = document.createElement("td");
-    const date = document.createElement("td");
-
-    rank.textContent = String(index + 1).padStart(2, "0");
-    score.textContent = String(entry.score).padStart(5, "0");
-    date.textContent = dateFormatter.format(new Date(entry.achievedAt));
-    score.className = "score-value";
-    row.append(rank, score, date);
-    scoresList.append(row);
-  });
-}
-
-function loadScores() {
-  try {
-    const savedScores = localStorage.getItem(SCORE_STORAGE_KEY);
-    if (!savedScores) return [];
-
-    const parsedScores = JSON.parse(savedScores);
-    if (!Array.isArray(parsedScores)) {
-      throw new TypeError(
-        "El formato guardado de puntuaciones no es una lista.",
-      );
-    }
-
-    return sortScores(
-      parsedScores.filter(
-        (entry) =>
-          Number.isSafeInteger(entry?.score) &&
-          entry.score >= 0 &&
-          typeof entry.achievedAt === "string" &&
-          !Number.isNaN(Date.parse(entry.achievedAt)),
-      ),
-    ).slice(0, 5);
-  } catch (error) {
-    console.error("No se pudieron cargar las puntuaciones guardadas.", error);
-    statsStatus.textContent = "NO SE PUDIERON CARGAR LOS RÉCORDS GUARDADOS.";
-    return [];
-  }
-}
-
-let savedScores = loadScores();
-renderScores(savedScores);
-
-function saveScore(score) {
-  const updatedScores = sortScores([
-    ...savedScores,
-    { score, achievedAt: new Date().toISOString() },
-  ]).slice(0, 5);
-
-  try {
-    localStorage.setItem(SCORE_STORAGE_KEY, JSON.stringify(updatedScores));
-    savedScores = updatedScores;
-    statsStatus.textContent = "";
-    renderScores(savedScores);
-  } catch (error) {
-    console.error(
-      "No se pudo guardar la puntuación en el almacenamiento local.",
-      error,
-    );
-    statsStatus.textContent =
-      "NO SE PUDO GUARDAR ESTA PUNTUACIÓN EN ESTE NAVEGADOR.";
-  }
+// RÉCORDS: el repositorio gestiona datos y el marcador se encarga de representarlos.
+const scoreRepository = createScoreRepository();
+const scoreBoard = createScoreBoard();
+const initialScores = scoreRepository.load();
+scoreBoard.render(initialScores.scores);
+if (initialScores.error) {
+  scoreBoard.setStatus("NO SE PUDIERON CARGAR LOS RÉCORDS GUARDADOS.");
 }
 
 // AUDIO DEL MENÚ: estas variables permiten coordinar la música web y la del juego.
@@ -611,7 +517,6 @@ class SpaceScene extends Phaser.Scene {
       `MISIÓN FALLIDA\nPUNTOS: ${this.score}\n\nPULSA JUGAR DE NUEVO`,
     );
     this.prompt.setFontSize(10);
-    saveScore(this.score);
     this.game.events.emit("game-over", this.score);
   }
 }
@@ -740,7 +645,17 @@ game.events.on("game-resumed", () => {
   pauseIcon.textContent = "Ⅱ";
 });
 
-game.events.on("game-over", () => {
+game.events.on("game-over", (score) => {
+  const result = scoreRepository.save(score);
+  if (result.error) {
+    scoreBoard.setStatus(
+      "NO SE PUDO GUARDAR ESTA PUNTUACIÓN EN ESTE NAVEGADOR.",
+    );
+  } else {
+    scoreBoard.setStatus("");
+    scoreBoard.render(result.scores);
+  }
+
   playLabel.textContent = "JUGAR DE NUEVO";
   playButton.disabled = false;
   playButton.classList.remove("is-playing");
