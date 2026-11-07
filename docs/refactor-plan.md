@@ -146,18 +146,31 @@ Las casillas marcadas inicialmente se comprobaron en la compilación local con i
 
 **Trabajo**
 
-1. Mover `SpaceScene` sin alterar mecánicas a `game/scenes/SpaceScene.js`.
-2. Mover la configuración y construcción de `Phaser.Game` a `game/createGame.js`.
-3. Centralizar en `game/events.js` los eventos actualmente usados para iniciar, actualizar direcciones táctiles, limpiar entradas y notificar estados de partida.
-4. Definir claramente comandos de entrada y eventos de salida: iniciar/pausar/reanudar/reiniciar y actualizaciones de estado/resultados.
-5. Eliminar dependencias implícitas de la escena a variables externas como el estado global del audio; inyectar dependencias o notificar al coordinador.
-6. Desregistrar listeners al terminar el ciclo de vida de una escena o aplicación para prevenir suscripciones duplicadas.
+1. [x] Mover `SpaceScene` sin alterar mecánicas a `game/scenes/SpaceScene.js`.
+2. [x] Mover la configuración y construcción de `Phaser.Game` a `game/createGame.js`.
+3. [x] Centralizar en `game/events.js` los eventos usados para iniciar, controlar pausa/reinicio, actualizar direcciones táctiles, cambiar música y notificar el estado/resultados.
+4. [x] Definir comandos explícitos para iniciar/pausar/reanudar/reiniciar y eventos de salida para estados/resultados.
+5. [x] Eliminar dependencias de la escena a estado de la página, bloqueo de scroll y música de menú; la preferencia de música se comunica mediante evento.
+6. [x] Desregistrar listeners globales al cerrar la escena.
+
+**Resultados**
+
+- `SpaceScene` conserva la lógica y los recursos de Phaser, pero ahora vive en su propio módulo y solo exporta la escena.
+- `createGame()` concentra la configuración de Phaser. La interfaz ya no instancia Phaser directamente ni consulta propiedades internas de la escena para controlar pausa o reinicio.
+- `GAME_EVENTS` define los nombres de comandos y notificaciones usados por la página y la escena.
+- La escena emite cambios de estado; `main.js` coordina la interfaz, el bloqueo de scroll y la música del menú. El evento de preferencia de música mantiene la música del juego sincronizada sin que la escena lea variables del módulo principal.
+- `SpaceScene` retira sus listeners del emisor global cuando Phaser cierra la escena.
+- Se mantiene la preferencia inicial de música habilitada y el comportamiento previo al comenzar, pausar, reanudar, reiniciar y terminar una partida.
+- Al comenzar cada ronda, la página vuelve a sincronizar la preferencia de música con la escena para cubrir también cambios ocurridos durante la carga inicial.
+- `npm run build` pasa. La advertencia de bundle mayor a 500 kB persiste; la extracción modular no incorpora división de código.
+- En navegador se verificaron carga del canvas y récord existente, inicio, pausa, reanudación, alternancia de música, reinicio de una ronda y que el récord no cambiara durante la prueba.
+- La lista completa de regresión de gameplay de la fase 0 queda pendiente de volver a ejecutar tras la extracción.
 
 **Salida / criterio de aceptación**
 
-- Phaser se crea mediante una sola función y la escena permanece responsable del ciclo de juego.
-- La UI no necesita consultar campos internos de la escena para determinar el estado.
-- El conjunto de comportamientos de la fase 0 sigue funcionando.
+- [x] Phaser se crea mediante una sola función y la escena permanece responsable del ciclo de juego.
+- [x] La UI no necesita consultar campos internos de la escena para determinar el estado.
+- [ ] Completar la lista de regresión manual de la fase 0 tras la extracción, incluidos movimiento, controles táctiles, colisiones/vidas, monedas y fin de partida.
 
 ### Fase 3 — Extraer UI y coordinador
 

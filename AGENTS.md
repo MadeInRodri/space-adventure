@@ -8,7 +8,7 @@ Los recursos del juego y del sitio están en `public/assets/`. La página se mon
 
 ## Estado actual y dirección arquitectónica
 
-La aplicación todavía es monolítica: `src/main.js` contiene el marcado de la página, la persistencia y representación de puntuaciones, el audio, la escena principal de Phaser, la configuración del juego y la conexión de los controles DOM con el juego. La escena también depende de estado y funciones definidos fuera de ella.
+La refactorización está en curso. `src/main.js` todavía coordina el marcado, el audio y los controles DOM; las puntuaciones ya están separadas en `src/scores/scoreRepository.js` y `src/ui/scoreBoard.js`. La escena Phaser vive en `src/game/scenes/SpaceScene.js`, su configuración en `src/game/createGame.js` y los nombres de eventos compartidos en `src/game/events.js`. Inspecciona los archivos actuales antes de asumir qué fases o módulos existen.
 
 La estructura siguiente es el destino gradual de la refactorización, no describe archivos que necesariamente ya existan:
 
