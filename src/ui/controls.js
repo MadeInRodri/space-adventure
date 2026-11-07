@@ -1,4 +1,36 @@
 import { GAME_EVENTS } from "../game/events.js";
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  Crosshair,
+  Eye,
+  EyeOff,
+  Heart,
+  Pause,
+  Play,
+  RotateCcw,
+  Volume2,
+  VolumeX,
+  createIcons,
+} from "lucide";
+
+const UI_ICONS = {
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  Crosshair,
+  Eye,
+  EyeOff,
+  Heart,
+  Pause,
+  Play,
+  RotateCcw,
+  Volume2,
+  VolumeX,
+};
 
 // Conecta los controles del DOM con comandos de juego sin exponer la escena.
 export function bindGameControls(
@@ -23,6 +55,19 @@ export function bindGameControls(
   const musicLabel = root.querySelector("#music-label");
   const musicIcon = root.querySelector("#music-icon");
 
+  createIcons({
+    icons: UI_ICONS,
+    attrs: { class: "ui-icon", "stroke-width": 1.8 },
+    root,
+  });
+
+  // Mantiene ambos SVG montados para que el estado cambie sin recrear iconos.
+  function showIconState(container, state) {
+    container.querySelectorAll("[data-icon-state]").forEach((iconState) => {
+      iconState.hidden = iconState.dataset.iconState !== state;
+    });
+  }
+
   function listen(target, eventName, handler, options) {
     target.addEventListener(eventName, handler, options);
     listeners.push(() => target.removeEventListener(eventName, handler, options));
@@ -43,7 +88,7 @@ export function bindGameControls(
     touchToggleLabel.textContent = visible
       ? "OCULTAR CONTROLES"
       : "MOSTRAR CONTROLES";
-    touchToggleIcon.textContent = visible ? "×" : "⌖";
+    showIconState(touchToggleIcon, visible ? "visible" : "hidden");
 
     if (!visible) {
       game.events.emit(GAME_EVENTS.CLEAR_TOUCH_DIRECTIONS);
@@ -108,7 +153,7 @@ export function bindGameControls(
     const enabled = musicButton.getAttribute("aria-pressed") !== "true";
     musicButton.setAttribute("aria-pressed", String(enabled));
     musicLabel.textContent = enabled ? "APAGAR MÚSICA" : "ACTIVAR MÚSICA";
-    musicIcon.textContent = enabled ? "♫" : "×";
+    showIconState(musicIcon, enabled ? "enabled" : "disabled");
     game.events.emit(GAME_EVENTS.MUSIC_CHANGED, enabled);
   });
 
@@ -120,19 +165,19 @@ export function bindGameControls(
     pauseButton.disabled = false;
     restartButton.disabled = false;
     pauseLabel.textContent = "PAUSAR";
-    pauseIcon.textContent = "Ⅱ";
+    showIconState(pauseIcon, "paused");
   });
 
   listenToGame(GAME_EVENTS.GAME_PAUSED, () => {
     gamePaused = true;
     pauseLabel.textContent = "REANUDAR";
-    pauseIcon.textContent = "▶";
+    showIconState(pauseIcon, "resumed");
   });
 
   listenToGame(GAME_EVENTS.GAME_RESUMED, () => {
     gamePaused = false;
     pauseLabel.textContent = "PAUSAR";
-    pauseIcon.textContent = "Ⅱ";
+    showIconState(pauseIcon, "paused");
   });
 
   listenToGame(GAME_EVENTS.GAME_OVER, () => {
